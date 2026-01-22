@@ -12,7 +12,7 @@
     <ToolCommandName>rlm</ToolCommandName>
 
     <!-- Ensure restore includes RID-specific targets used by build packaging/publish steps -->
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <!-- <RuntimeIdentifiers>win-x64</RuntimeIdentifiers> -->
 
     <!-- AOT Configuration -->
     <PublishAot Condition="'$(SelfContained)' == 'true'">true</PublishAot>
