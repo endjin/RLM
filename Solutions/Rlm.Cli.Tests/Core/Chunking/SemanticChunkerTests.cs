@@ -242,6 +242,7 @@ public sealed class SemanticChunkerTests
         {
             await foreach (ContentChunk _ in chunker.ChunkAsync(document, cts.Token))
             {
+                // Intentionally empty - iterating to trigger cancellation check
             }
         });
     }

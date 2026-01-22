@@ -129,25 +129,21 @@ public sealed partial class MarkdownDocumentReader : IDocumentReader
 
     private static void ParseSimpleYaml(string yaml, Dictionary<string, string> metadata)
     {
-        foreach (string line in yaml.Split('\n'))
+        var pairs = yaml.Split('\n')
+            .Select(line => line.Trim())
+            .Where(trimmed => !string.IsNullOrEmpty(trimmed) && !trimmed.StartsWith('#'))
+            .Select(trimmed =>
+            {
+                int colonIndex = trimmed.IndexOf(':');
+                return colonIndex > 0
+                    ? (key: trimmed[..colonIndex].Trim(), value: trimmed[(colonIndex + 1)..].Trim().Trim('"', '\''))
+                    : (key: string.Empty, value: string.Empty);
+            })
+            .Where(pair => !string.IsNullOrEmpty(pair.key) && !string.IsNullOrEmpty(pair.value));
+
+        foreach (var (key, value) in pairs)
         {
-            string trimmed = line.Trim();
-            if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith('#'))
-            {
-                continue;
-            }
-
-            int colonIndex = trimmed.IndexOf(':');
-            if (colonIndex > 0)
-            {
-                string key = trimmed[..colonIndex].Trim();
-                string value = trimmed[(colonIndex + 1)..].Trim().Trim('"', '\'');
-
-                if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
-                {
-                    metadata[key] = value;
-                }
-            }
+            metadata[key] = value;
         }
     }
 

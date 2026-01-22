@@ -267,37 +267,10 @@ public sealed class ChunkCommand(IAnsiConsole console, ISessionStore sessionStor
         int semanticScore = 0;
         int implementationScore = 0;
 
-        foreach (string indicator in needleIndicators)
-        {
-            if (lowerQuery.Contains(indicator))
-            {
-                filterScore += 2;
-            }
-        }
-
-        foreach (string indicator in aggregationIndicators)
-        {
-            if (lowerQuery.Contains(indicator))
-            {
-                aggregationScore += 2;
-            }
-        }
-
-        foreach (string indicator in analysisIndicators)
-        {
-            if (lowerQuery.Contains(indicator))
-            {
-                semanticScore += 2;
-            }
-        }
-
-        foreach (string indicator in implementationIndicators)
-        {
-            if (lowerQuery.Contains(indicator))
-            {
-                implementationScore += 2;
-            }
-        }
+        filterScore += needleIndicators.Count(indicator => lowerQuery.Contains(indicator)) * 2;
+        aggregationScore += aggregationIndicators.Count(indicator => lowerQuery.Contains(indicator)) * 2;
+        semanticScore += analysisIndicators.Count(indicator => lowerQuery.Contains(indicator)) * 2;
+        implementationScore += implementationIndicators.Count(indicator => lowerQuery.Contains(indicator)) * 2;
 
         // Check content structure for markdown headers
         bool hasMarkdownStructure = content.Contains("\n# ") ||
