@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Rlm.Cli.Tests/Rlm.Cli.Tests.csproj" />
+  <Project Path="Rlm.Cli/Rlm.Cli.csproj" />
+</Solution>

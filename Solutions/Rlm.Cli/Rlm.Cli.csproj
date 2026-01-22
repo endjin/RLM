@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>Rlm.Cli</RootNamespace>
+    <AssemblyName>rlm</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>rlm</ToolCommandName>
+
+    <!-- Ensure restore includes RID-specific targets used by build packaging/publish steps -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+
+    <!-- AOT Configuration -->
+    <PublishAot Condition="'$(SelfContained)' == 'true'">true</PublishAot>
+    <PublishAot Condition="'$(SelfContained)' != 'true'">false</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <!-- Suppress expected warnings for dynamic regex patterns and Spectre.Console.Cli type registration -->
+    <NoWarn>$(NoWarn);IL2026;IL2067;IL3050</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.2" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
+    <PackageReference Include="Microsoft.ML.Tokenizers.Data.Cl100kBase" Version="2.0.0" />
+    <PackageReference Include="Polly" Version="8.6.5" />
+    <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
+    <PackageReference Include="Spectre.IO" Version="0.21.0" />
+    <PackageReference Include="PdfPig" Version="0.1.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
+  </ItemGroup>
+
+</Project>
