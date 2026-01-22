@@ -40,7 +40,7 @@ $SkipPublish = $true
 $SolutionToBuild = (Resolve-Path (Join-Path $here "./Solutions/Rlm.slnx")).Path
 $ProjectsToPublish = @("Solutions/Rlm.Cli/Rlm.Cli.csproj")
 $NugetPublishSource = property ZF_NUGET_PUBLISH_SOURCE "$here/_local-nuget-feed"
-$IncludeAssembliesInCodeCoverage = "Rlm.Cli*"
+$IncludeAssembliesInCodeCoverage = "rlm"
 $ExcludeAssembliesInCodeCoverage = "Rlm.Cli.Tests*"
 
 $CreateGitHubRelease = $true
