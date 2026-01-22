@@ -165,7 +165,7 @@ public sealed class SyntacticValidatorTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert

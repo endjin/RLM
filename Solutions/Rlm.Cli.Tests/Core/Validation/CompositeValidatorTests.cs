@@ -162,7 +162,7 @@ public sealed class CompositeValidatorTests
         IDocumentValidator validator = Substitute.For<IDocumentValidator>();
         CompositeValidator composite = new(validator);
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert

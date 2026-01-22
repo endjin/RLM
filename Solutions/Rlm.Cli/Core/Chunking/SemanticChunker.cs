@@ -61,7 +61,15 @@ public sealed partial class SemanticChunker(
         // Apply filter pattern if specified (hybrid mode)
         if (!string.IsNullOrEmpty(filterPattern))
         {
-            Regex filter = new(filterPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            Regex filter;
+            try
+            {
+                filter = new(filterPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Invalid filter pattern '{filterPattern}': {ex.Message}", nameof(filterPattern), ex);
+            }
             sections = sections.Where(s => filter.IsMatch(s.Content) || filter.IsMatch(s.Header)).ToList();
         }
 

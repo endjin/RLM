@@ -88,7 +88,7 @@ public sealed class ChunkProcessorChainTests
         // Arrange
         IChunkProcessor processor = Substitute.For<IChunkProcessor>();
         ContentChunk chunk = ContentChunkBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         ChunkProcessorChain chain = new(processor);

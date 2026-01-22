@@ -88,7 +88,7 @@ public sealed class DocumentProcessorChainTests
         // Arrange
         IDocumentProcessor processor = Substitute.For<IDocumentProcessor>();
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         DocumentProcessorChain chain = new(processor);

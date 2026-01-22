@@ -58,7 +58,7 @@ public sealed class JumpCommand(IAnsiConsole console, ISessionStore sessionStore
             }
 
             percentage = Math.Clamp(percentage, 0, 100);
-            targetIndex = (int)Math.Round(session.ChunkBuffer.Count * percentage / 100.0) - 1;
+            targetIndex = (int)Math.Round((double)session.ChunkBuffer.Count * percentage / 100.0) - 1;
         }
         else
         {

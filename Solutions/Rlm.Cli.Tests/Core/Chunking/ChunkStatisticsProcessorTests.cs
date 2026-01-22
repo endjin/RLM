@@ -169,7 +169,7 @@ public sealed class ChunkStatisticsProcessorTests
     {
         // Arrange
         ContentChunk chunk = ContentChunkBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert

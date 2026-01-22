@@ -96,9 +96,19 @@ public sealed partial class PdfDocumentReader : IDocumentReader
                 }
             };
         }
-        catch (Exception)
+        catch (InvalidOperationException)
         {
-            // PDF parsing failed - return null to allow fallback to other readers
+            // Invalid PDF format - return null to allow fallback to other readers
+            return null;
+        }
+        catch (IOException)
+        {
+            // File access error - return null to allow fallback to other readers
+            return null;
+        }
+        catch (NotSupportedException)
+        {
+            // Unsupported PDF feature (e.g., encryption) - return null to allow fallback
             return null;
         }
     }

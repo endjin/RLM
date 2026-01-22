@@ -18,7 +18,15 @@ public sealed partial class FilteringChunker(string pattern, int contextSize = 5
         RlmDocument document,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        Regex regex = new(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        Regex regex;
+        try
+        {
+            regex = new(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new ArgumentException($"Invalid regex pattern '{pattern}': {ex.Message}", nameof(pattern), ex);
+        }
         MatchCollection matches = regex.Matches(document.Content);
 
         if (matches.Count == 0)

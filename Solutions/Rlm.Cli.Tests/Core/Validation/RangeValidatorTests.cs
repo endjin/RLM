@@ -96,14 +96,14 @@ public sealed class RangeValidatorTests
     public async Task ValidateAsync_DocumentApproachingMaxSize_ReturnsWarning()
     {
         // Arrange - Create a validator where content is 85% of max size
-        RangeValidator validator = new(maxSizeBytes: 1000, maxLineCount: 100000, minSizeChars: 1);
+        RangeValidator customValidator = new(maxSizeBytes: 1000, maxLineCount: 100000, minSizeChars: 1);
         string content = new('X', 850); // 85% of 1000 bytes
         RlmDocument document = RlmDocumentBuilder.Default()
             .WithContent(content)
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await customValidator.ValidateAsync(document);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -114,7 +114,7 @@ public sealed class RangeValidatorTests
     public async Task ValidateAsync_DocumentApproachingMaxLineCount_ReturnsWarning()
     {
         // Arrange - Create a validator where content has 85% of max lines
-        RangeValidator validator = new(maxSizeBytes: 10_000_000, maxLineCount: 100, minSizeChars: 1);
+        RangeValidator customValidator = new(maxSizeBytes: 10_000_000, maxLineCount: 100, minSizeChars: 1);
         string contentWithManyLines = string.Join("\n", Enumerable.Range(1, 85).Select(i => $"Line {i}"));
         RlmDocument document = RlmDocumentBuilder.Default()
             .WithContent(contentWithManyLines)
@@ -125,7 +125,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await customValidator.ValidateAsync(document);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -137,7 +137,7 @@ public sealed class RangeValidatorTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert

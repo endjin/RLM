@@ -205,7 +205,7 @@ public sealed class ContentCleaningProcessorTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert

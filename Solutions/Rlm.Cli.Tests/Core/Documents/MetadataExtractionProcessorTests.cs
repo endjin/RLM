@@ -381,7 +381,7 @@ public sealed class MetadataExtractionProcessorTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default().Build();
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
         // Act & Assert
