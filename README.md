@@ -23,21 +23,21 @@ A .NET CLI tool for processing large documents that exceed LLM context windows. 
 
 ```bash
 # Build
-dotnet build src/Rlm.slnx
+dotnet build Solutions/Rlm.slnx
 
 # Run directly
-dotnet run --project src/Rlm.Cli -- load document.md
+dotnet run --project Solutions/Rlm.Cli -- load document.md
 
 # Run tests
-dotnet test src/Rlm.slnx
+dotnet test --solution Solutions/Rlm.slnx
 ```
 
 ### Install as Global Tool
 
 ```bash
-cd src/Rlm.Cli
+cd Solutions/Rlm.Cli
 dotnet pack
-dotnet tool install --global --add-source ./nupkg rlm
+dotnet tool install --global --add-source ./bin/Release rlm
 ```
 
 ### Basic Workflow
@@ -105,7 +105,7 @@ rlm aggregate
 ## Architecture Overview
 
 ```
-src/Rlm.Cli/
+Solutions/Rlm.Cli/
 ├── Commands/          # 12 CLI commands (load, chunk, next, etc.)
 ├── Core/
 │   ├── Documents/     # Multi-format readers (PDF, HTML, Word, etc.)
