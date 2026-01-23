@@ -51,8 +51,8 @@ rlm load document.md
 # Load directory (merges all documents by default)
 rlm load ./docs/
 
-# Load directory with glob pattern
-rlm load ./docs/ --pattern "*.md"
+# Recursively load all markdown files from a directory with glob pattern
+rlm load ./docs/ --pattern "**/*.md"
 
 # Load without merging (keeps documents separate)
 rlm load ./docs/ --merge false
@@ -200,7 +200,7 @@ rlm clear
 
 | Option      | Description                          | Example                         |
 |-------------|--------------------------------------|---------------------------------|
-| `--pattern` | Glob pattern for directory loading   | `--pattern "*.md"`              |
+| `--pattern` | Glob pattern for directory loading   | `--pattern "**/*"`              |
 | `--merge`   | Merge multiple documents (default: true) | `--merge false`             |
 
 ### JSON Output Options
