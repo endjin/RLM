@@ -291,4 +291,4 @@ If JSON output is malformed:
 - [SKILL.md](SKILL.md) - Overview and workflow
 - [strategies.md](strategies.md) - All chunking strategies with options
 - [examples.md](examples.md) - Real-world workflow scenarios
-- [reference.md](reference.md) - Technical architecture
+- [reference.md](reference.md) - JSON output formats and session file

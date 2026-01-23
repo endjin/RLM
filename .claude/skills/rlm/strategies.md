@@ -194,5 +194,5 @@ rlm chunk --strategy auto --query "find the API key"
 
 - [SKILL.md](SKILL.md) - Overview and workflow
 - [examples.md](examples.md) - Real-world workflow scenarios
-- [reference.md](reference.md) - Technical architecture
+- [reference.md](reference.md) - JSON output formats and session file
 - [troubleshooting.md](troubleshooting.md) - Tips and error handling

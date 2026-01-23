@@ -26,7 +26,7 @@ Use this skill when:
 |---------------------|------------------------------------------|--------------------------------------|
 | Strategy Deep-Dive  | [strategies.md](strategies.md)           | All chunking strategies with options |
 | Examples            | [examples.md](examples.md)               | Real-world workflow scenarios        |
-| Technical Reference | [reference.md](reference.md)             | Architecture and JSON output models  |
+| Technical Reference | [reference.md](reference.md)             | JSON output formats and session file |
 | Troubleshooting     | [troubleshooting.md](troubleshooting.md) | Tips, errors, and edge cases         |
 
 ## Supported Formats

@@ -375,5 +375,5 @@ rlm store errors "Found 12 failed API calls"
 
 - [SKILL.md](SKILL.md) - Overview and workflow
 - [strategies.md](strategies.md) - All chunking strategies with options
-- [reference.md](reference.md) - Technical architecture
+- [reference.md](reference.md) - JSON output formats and session file
 - [troubleshooting.md](troubleshooting.md) - Tips and error handling
