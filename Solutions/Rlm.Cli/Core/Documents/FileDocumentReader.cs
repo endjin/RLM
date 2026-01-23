@@ -98,7 +98,7 @@ public sealed class FileDocumentReader(IFileSystem fileSystem) : IDocumentReader
         }
 
         // Use glob pattern matching for directory traversal
-        IEnumerable<string> files = GetMatchingFiles(path, pattern ?? "*");
+        IEnumerable<string> files = GetMatchingFiles(path, pattern ?? "**/*");
 
         foreach (string filePath in files)
         {
