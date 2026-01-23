@@ -1,6 +1,6 @@
 # RLM CLI (Recursive Language Model Context Tool)
 
-A .NET CLI tool for processing large documents that exceed LLM context windows. RLM implements the Data Ingestion Building Blocks pattern, enabling streaming content decomposition, multi-turn processing, and result aggregation.
+A .NET CLI tool for processing large documents that exceed LLM context windows. RLM implements a data ingestion pattern, enabling streaming content decomposition, multi-turn processing, and result aggregation.
 
 ## Key Features
 
