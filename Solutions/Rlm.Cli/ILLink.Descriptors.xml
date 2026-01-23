@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <!-- Preserve all command types and their Settings classes -->
+  <assembly fullname="rlm">
+    <type fullname="Rlm.Cli.Commands.*" preserve="all" />
+  </assembly>
+
+  <!-- Preserve Spectre.Console.Cli attribute types for reflection-based command parsing -->
+  <assembly fullname="Spectre.Console.Cli">
+    <type fullname="Spectre.Console.Cli.CommandArgumentAttribute" preserve="all" />
+    <type fullname="Spectre.Console.Cli.CommandOptionAttribute" preserve="all" />
+    <type fullname="Spectre.Console.Cli.CommandSettings" preserve="all" />
+  </assembly>
+</linker>

@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+*.sbom.*
+.zf/extensions/
+_codeCoverage/
+_packages/
