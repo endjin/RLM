@@ -29,7 +29,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -45,7 +45,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -63,7 +63,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await smallValidator.ValidateAsync(document);
+        ValidationResult result = await smallValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -85,7 +85,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await smallValidator.ValidateAsync(document);
+        ValidationResult result = await smallValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -103,7 +103,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await customValidator.ValidateAsync(document);
+        ValidationResult result = await customValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -125,7 +125,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await customValidator.ValidateAsync(document);
+        ValidationResult result = await customValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -164,7 +164,7 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await customValidator.ValidateAsync(document);
+        ValidationResult result = await customValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -186,11 +186,13 @@ public sealed class RangeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await strictValidator.ValidateAsync(document);
+        ValidationResult result = await strictValidator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
         // Should have errors for min size and max line count (and possibly max size)
         result.Errors.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
+
+    public TestContext TestContext { get; set; }
 }

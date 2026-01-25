@@ -4,6 +4,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Spectre.IO;
 
 namespace Rlm.Cli.Core.Documents;
 
@@ -11,7 +12,7 @@ namespace Rlm.Cli.Core.Documents;
 /// Reads Markdown documents with YAML frontmatter extraction and structure detection.
 /// Extracts metadata including title, headers, code blocks, and frontmatter fields.
 /// </summary>
-public sealed partial class MarkdownDocumentReader : IDocumentReader
+public sealed partial class MarkdownDocumentReader(IFileSystem fileSystem) : IDocumentReader
 {
     public bool CanRead(Uri source)
     {
@@ -20,7 +21,8 @@ public sealed partial class MarkdownDocumentReader : IDocumentReader
             return false;
         }
 
-        string extension = Path.GetExtension(source.LocalPath).ToLowerInvariant();
+        FilePath filePath = new(source.LocalPath);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension is ".md" or ".markdown";
     }
 
@@ -32,12 +34,14 @@ public sealed partial class MarkdownDocumentReader : IDocumentReader
         }
 
         string path = source.LocalPath;
-        if (!File.Exists(path))
+        FilePath filePath = new(path);
+        if (!fileSystem.File.Exists(filePath))
         {
             return null;
         }
 
-        string content = await File.ReadAllTextAsync(path, cancellationToken);
+        IFile file = fileSystem.GetFile(filePath);
+        string content = await file.ReadAllTextAsync();
         return ParseMarkdown(source, content);
     }
 
@@ -105,9 +109,10 @@ public sealed partial class MarkdownDocumentReader : IDocumentReader
 
         string[] lines = processedContent.Split('\n');
 
+        FilePath filePath = new(path);
         return new RlmDocument
         {
-            Id = title ?? Path.GetFileName(path),
+            Id = title ?? filePath.GetFilename().ToString(),
             Content = processedContent,
             Metadata = new DocumentMetadata
             {

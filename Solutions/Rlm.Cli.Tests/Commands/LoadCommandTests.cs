@@ -24,19 +24,19 @@ public sealed class LoadCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         FakeEnvironment environment = FakeEnvironment.CreateLinuxEnvironment();
-        fileSystem = new FakeFileSystem(environment);
+        fileSystem = new(environment);
         sessionStore = Substitute.For<ISessionStore>();
 
-        command = new LoadCommand(console, fileSystem, sessionStore);
+        command = new(console, fileSystem, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_FileDoesNotExist_ReturnsErrorCode()
     {
         // Arrange - file doesn't exist in fake file system
-        LoadCommand.Settings settings = new LoadCommand.Settings { Source = "/nonexistent/file.txt" };
+        LoadCommand.Settings settings = new() { Source = "/nonexistent/file.txt" };
         CommandContext context = CreateCommandContext();
 
         // Act
@@ -55,10 +55,10 @@ public sealed class LoadCommandTests
         const string content = "Test file content\nLine 2\nLine 3";
         fileSystem.CreateFile("/test/file.txt").SetTextContent(content);
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
-        LoadCommand.Settings settings = new LoadCommand.Settings { Source = "/test/file.txt" };
+        LoadCommand.Settings settings = new() { Source = "/test/file.txt" };
         CommandContext context = CreateCommandContext();
 
         // Act
@@ -67,7 +67,7 @@ public sealed class LoadCommandTests
         // Assert
         result.ShouldBe(0);
         console.Output.ShouldContain("Document loaded successfully");
-        await sessionStore.Received(1).SaveAsync(Arg.Any<RlmSession>(), Arg.Any<CancellationToken>());
+        await sessionStore.Received(1).SaveAsync(Arg.Any<RlmSession>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -77,9 +77,9 @@ public sealed class LoadCommandTests
         const string content = "Test content";
         fileSystem.CreateFile("/test/file.txt").SetTextContent(content);
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
-        LoadCommand.Settings settings = new LoadCommand.Settings { Source = "/test/file.txt" };
+        LoadCommand.Settings settings = new() { Source = "/test/file.txt" };
         CommandContext context = CreateCommandContext();
 
         // Act
@@ -98,9 +98,9 @@ public sealed class LoadCommandTests
         // Arrange - empty file should still be loadable
         fileSystem.CreateFile("/test/empty.txt").SetTextContent("");
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
-        LoadCommand.Settings settings = new LoadCommand.Settings { Source = "/test/empty.txt" };
+        LoadCommand.Settings settings = new() { Source = "/test/empty.txt" };
         CommandContext context = CreateCommandContext();
 
         // Act
@@ -113,8 +113,8 @@ public sealed class LoadCommandTests
 
     private static CommandContext CreateCommandContext()
     {
-        MockIRemainingArguments remaining = new MockIRemainingArguments();
-        return new CommandContext([], remaining, "load", null);
+        MockIRemainingArguments remaining = new();
+        return new([], remaining, "load", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

@@ -19,7 +19,7 @@ public sealed class FilterCommand(
     IAnsiConsole console,
     ISessionStore sessionStore) : AsyncCommand<FilterCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<pattern>")]
         [Description("Regex pattern to search for")]
@@ -33,7 +33,7 @@ public sealed class FilterCommand(
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasDocument)
         {
@@ -60,7 +60,7 @@ public sealed class FilterCommand(
         // Update session
         session.ChunkBuffer = chunks;
         session.CurrentChunkIndex = 0;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         // Output summary
         console.MarkupLine($"[green]Found {chunks.Count} matching segment(s)[/]");

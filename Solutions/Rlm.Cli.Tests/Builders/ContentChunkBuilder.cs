@@ -57,7 +57,7 @@ public sealed class ContentChunkBuilder
 
     public ContentChunkBuilder WithMetadata(Dictionary<string, string> metadata)
     {
-        this.metadata = new Dictionary<string, string>(metadata);
+        this.metadata = new(metadata);
         return this;
     }
 
@@ -67,7 +67,7 @@ public sealed class ContentChunkBuilder
         Content = content,
         StartPosition = startPosition,
         EndPosition = endPosition,
-        Metadata = new Dictionary<string, string>(metadata)
+        Metadata = new(metadata)
     };
 
     public static ContentChunkBuilder Default() => new();

@@ -22,7 +22,7 @@ public sealed class ChunkProcessorChainTests
             .Build();
 
         // Act
-        ContentChunk result = await chain.ProcessAsync(chunk);
+        ContentChunk result = await chain.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(chunk);
@@ -46,7 +46,7 @@ public sealed class ChunkProcessorChainTests
         ChunkProcessorChain chain = new(processor);
 
         // Act
-        ContentChunk result = await chain.ProcessAsync(inputChunk);
+        ContentChunk result = await chain.ProcessAsync(inputChunk, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(processedChunk);
@@ -73,7 +73,7 @@ public sealed class ChunkProcessorChainTests
         ChunkProcessorChain chain = new(processor1, processor2, processor3);
 
         // Act
-        ContentChunk result = await chain.ProcessAsync(chunk0);
+        ContentChunk result = await chain.ProcessAsync(chunk0, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(chunk3);
@@ -142,7 +142,7 @@ public sealed class ChunkProcessorChainTests
             .Build();
 
         // Act
-        ContentChunk result = await chain.ProcessAsync(chunk);
+        ContentChunk result = await chain.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("wordCount");
@@ -166,4 +166,6 @@ public sealed class ChunkProcessorChainTests
         // Assert
         chain.Count.ShouldBe(2);
     }
+
+    public TestContext TestContext { get; set; }
 }

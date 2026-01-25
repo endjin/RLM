@@ -18,7 +18,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class SkipCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<SkipCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<count>")]
         [Description("Number of chunks to skip (positive = forward, negative = backward)")]
@@ -35,7 +35,7 @@ public sealed class SkipCommand(IAnsiConsole console, ISessionStore sessionStore
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasChunks)
         {
@@ -75,7 +75,7 @@ public sealed class SkipCommand(IAnsiConsole console, ISessionStore sessionStore
         targetIndex = Math.Clamp(targetIndex, 0, session.ChunkBuffer.Count - 1);
 
         session.CurrentChunkIndex = targetIndex;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         ContentChunk chunk = session.CurrentChunk!;
         int skipped = targetIndex - previousIndex;

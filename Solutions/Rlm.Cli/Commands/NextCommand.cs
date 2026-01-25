@@ -18,19 +18,25 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class NextCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<NextCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandOption("-j|--json")]
         [Description("Output in JSON format for machine parsing")]
         public bool Json { get; set; }
+
+        [CommandOption("--raw")]
+        [Description("Output raw content for piping/scripts.")]
+        public bool Raw { get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasChunks)
         {
+            if (settings.Raw) return 1;
+
             if (settings.Json)
             {
                 console.WriteLine("{\"error\": \"No chunks available\"}");
@@ -44,6 +50,8 @@ public sealed class NextCommand(IAnsiConsole console, ISessionStore sessionStore
 
         if (!session.HasMoreChunks)
         {
+            if (settings.Raw) return 0;
+
             if (settings.Json)
             {
                 console.WriteLine("{\"done\": true, \"message\": \"No more chunks\"}");
@@ -60,9 +68,16 @@ public sealed class NextCommand(IAnsiConsole console, ISessionStore sessionStore
 
         // Advance to next chunk
         session.CurrentChunkIndex++;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         ContentChunk chunk = session.CurrentChunk!;
+        
+        if (settings.Raw)
+        {
+            Console.WriteLine(chunk.Content);
+            return 0;
+        }
+
         OutputChunk(chunk, session.ChunkBuffer.Count, session.HasMoreChunks, settings.Json);
 
         return 0;

@@ -7,48 +7,85 @@ using Rlm.Cli.Infrastructure;
 using Rlm.Cli.Tests.Builders;
 using Shouldly;
 using Spectre.IO;
-using Path = System.IO.Path;
-using File = System.IO.File;
-using Environment = System.Environment;
+using Spectre.IO.Testing;
 
 namespace Rlm.Cli.Tests.Infrastructure;
 
 /// <summary>
-/// Tests for SessionStore that use the actual file system.
-/// These tests are non-parallelizable because they share the session file in the home directory.
+/// Tests for SessionStore that use a fake file system.
+/// These tests can run in parallel since each test has its own isolated file system.
 /// </summary>
 [TestClass]
-[DoNotParallelize]
 public sealed class SessionStoreTests
 {
-    private static readonly string SessionPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".rlm-session.json");
-
-    private IFileSystem fileSystem = null!;
+    private FakeEnvironment environment = null!;
+    private FakeFileSystem fileSystem = null!;
     private SessionStore sessionStore = null!;
+
+    private FilePath GetSessionPath(string? sessionId = null)
+    {
+        string filename = string.IsNullOrWhiteSpace(sessionId)
+            ? ".rlm-session.json"
+            : $"rlm-session-{sessionId}.json";
+
+        return new DirectoryPath("/home/user").CombineWithFilePath(filename);
+    }
 
     [TestInitialize]
     public void Setup()
     {
-        // Ensure clean state before each test
-        if (File.Exists(SessionPath))
-        {
-            File.Delete(SessionPath);
-        }
-
-        fileSystem = new FileSystem();
-        sessionStore = new SessionStore(fileSystem);
+        environment = FakeEnvironment.CreateLinuxEnvironment();
+        environment.SetWorkingDirectory("/home/user");
+        environment.SetEnvironmentVariable("HOME", "/home/user");
+        fileSystem = new FakeFileSystem(environment);
+        fileSystem.Directory.Create("/home/user");
+        sessionStore = new SessionStore(fileSystem, environment);
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    [TestMethod]
+    public async Task SaveAsync_WithDifferentSessionIds_CreatesDifferentFiles()
     {
-        // Clean up after each test
-        if (File.Exists(SessionPath))
-        {
-            File.Delete(SessionPath);
-        }
+        // Arrange
+        RlmSession sessionA = RlmSessionBuilder.Default().WithContent("Content A").Build();
+        RlmSession sessionB = RlmSessionBuilder.Default().WithContent("Content B").Build();
+
+        string sessionNameA = "test-session-a";
+        string sessionNameB = "test-session-b";
+
+        // Act
+        await sessionStore.SaveAsync(sessionA, sessionNameA, TestContext.CancellationToken);
+        await sessionStore.SaveAsync(sessionB, sessionNameB, TestContext.CancellationToken);
+
+        // Assert
+        fileSystem.File.Exists(GetSessionPath(sessionNameA)).ShouldBeTrue();
+        fileSystem.File.Exists(GetSessionPath(sessionNameB)).ShouldBeTrue();
+
+        RlmSession loadedA = await sessionStore.LoadAsync(sessionNameA, TestContext.CancellationToken);
+        RlmSession loadedB = await sessionStore.LoadAsync(sessionNameB, TestContext.CancellationToken);
+
+        loadedA.Content.ShouldBe("Content A");
+        loadedB.Content.ShouldBe("Content B");
+    }
+
+    [TestMethod]
+    public async Task DeleteAll_DeletesMultipleSessions()
+    {
+        // Arrange
+        await sessionStore.SaveAsync(new RlmSession(), "test-del-1", TestContext.CancellationToken);
+        await sessionStore.SaveAsync(new RlmSession(), "test-del-2", TestContext.CancellationToken);
+        await sessionStore.SaveAsync(new RlmSession(), cancellationToken: TestContext.CancellationToken); // Default
+
+        fileSystem.File.Exists(GetSessionPath("test-del-1")).ShouldBeTrue();
+        fileSystem.File.Exists(GetSessionPath("test-del-2")).ShouldBeTrue();
+        fileSystem.File.Exists(GetSessionPath()).ShouldBeTrue();
+
+        // Act
+        sessionStore.DeleteAll();
+
+        // Assert
+        fileSystem.File.Exists(GetSessionPath("test-del-1")).ShouldBeFalse();
+        fileSystem.File.Exists(GetSessionPath("test-del-2")).ShouldBeFalse();
+        fileSystem.File.Exists(GetSessionPath()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -57,7 +94,7 @@ public sealed class SessionStoreTests
         // Arrange - session file already deleted in Setup
 
         // Act
-        RlmSession session = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(null, TestContext.CancellationToken);
 
         // Assert
         session.ShouldNotBeNull();
@@ -78,8 +115,8 @@ public sealed class SessionStoreTests
             .Build();
 
         // Act
-        await sessionStore.SaveAsync(session, TestContext.CancellationToken);
-        RlmSession loadedSession = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session, null, TestContext.CancellationToken);
+        RlmSession loadedSession = await sessionStore.LoadAsync(null, TestContext.CancellationToken);
 
         // Assert
         loadedSession.Content.ShouldBe("Test content");
@@ -92,23 +129,40 @@ public sealed class SessionStoreTests
     public void Delete_RemovesSessionFile()
     {
         // Arrange
-        File.WriteAllText(SessionPath, "{}");
+        FilePath path = GetSessionPath();
+        fileSystem.CreateFile(path).SetTextContent("{}");
 
         // Act
         sessionStore.Delete();
 
         // Assert
-        File.Exists(SessionPath).ShouldBeFalse();
+        fileSystem.File.Exists(path).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void Delete_NamedSession_RemovesSpecificFile()
+    {
+        // Arrange
+        string name = "test-delete-named";
+        FilePath path = GetSessionPath(name);
+        fileSystem.CreateFile(path).SetTextContent("{}");
+
+        // Act
+        sessionStore.Delete(name);
+
+        // Assert
+        fileSystem.File.Exists(path).ShouldBeFalse();
     }
 
     [TestMethod]
     public async Task LoadAsync_CorruptedJsonFile_ReturnsNewSession()
     {
         // Arrange
-        await File.WriteAllTextAsync(SessionPath, "{ invalid json }}}", TestContext.CancellationToken);
+        FilePath path = GetSessionPath();
+        fileSystem.CreateFile(path).SetTextContent("{ invalid json }}}");
 
         // Act
-        RlmSession session = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(sessionId: null, TestContext.CancellationToken);
 
         // Assert
         session.ShouldNotBeNull();
@@ -122,8 +176,8 @@ public sealed class SessionStoreTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(3).Build();
 
         // Act
-        await sessionStore.SaveAsync(session, TestContext.CancellationToken);
-        RlmSession loadedSession = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session, null, TestContext.CancellationToken);
+        RlmSession loadedSession = await sessionStore.LoadAsync(null, TestContext.CancellationToken);
 
         // Assert
         loadedSession.ChunkBuffer.Count.ShouldBe(3);
@@ -148,8 +202,8 @@ public sealed class SessionStoreTests
         session.RecursionDepth = 3;
 
         // Act
-        await sessionStore.SaveAsync(session, TestContext.CancellationToken);
-        RlmSession loadedSession = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session, null, TestContext.CancellationToken);
+        RlmSession loadedSession = await sessionStore.LoadAsync(null, TestContext.CancellationToken);
 
         // Assert
         loadedSession.RecursionDepth.ShouldBe(3);
@@ -164,11 +218,11 @@ public sealed class SessionStoreTests
         RlmSession session3 = RlmSessionBuilder.Default().WithResult("key3", "value3").Build();
 
         // Act - Rapid successive saves
-        await sessionStore.SaveAsync(session1, TestContext.CancellationToken);
-        await sessionStore.SaveAsync(session2, TestContext.CancellationToken);
-        await sessionStore.SaveAsync(session3, TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session1, null, TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session2, null, TestContext.CancellationToken);
+        await sessionStore.SaveAsync(session3, null, TestContext.CancellationToken);
 
-        RlmSession loadedSession = await sessionStore.LoadAsync(TestContext.CancellationToken);
+        RlmSession loadedSession = await sessionStore.LoadAsync(null, TestContext.CancellationToken);
 
         // Assert - Last save should win
         loadedSession.Results.ShouldContainKey("key3");

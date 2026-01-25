@@ -25,17 +25,17 @@ public sealed class SliceCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new SliceCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoDocument_ReturnsErrorCode()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
         SliceCommand.Settings settings = new() { Range = "0:10" };
         CommandContext context = CreateCommandContext();
@@ -58,7 +58,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(16).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "0:10" };
         CommandContext context = CreateCommandContext();
@@ -80,7 +80,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(16).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "-6:" };
         CommandContext context = CreateCommandContext();
@@ -102,7 +102,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(10).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = ":5" };
         CommandContext context = CreateCommandContext();
@@ -124,7 +124,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(10).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "5:" };
         CommandContext context = CreateCommandContext();
@@ -146,7 +146,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(10).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "invalid" };
@@ -169,7 +169,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(5).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "0:1000" };
         CommandContext context = CreateCommandContext();
@@ -191,7 +191,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(10).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "0:-2" };
         CommandContext context = CreateCommandContext();
@@ -213,7 +213,7 @@ public sealed class SliceCommandTests
             .WithMetadata(m => m.WithTotalLength(12).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         SliceCommand.Settings settings = new() { Range = "0:5" };
@@ -230,7 +230,7 @@ public sealed class SliceCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "slice", null);
+        return new([], remaining, "slice", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

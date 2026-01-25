@@ -79,6 +79,11 @@ app.Configure(config =>
     config.AddCommand<ResultsCommand>("results")
         .WithDescription("List all stored results");
 
+    // Import command - bulk import results
+    config.AddCommand<ImportCommand>("import")
+        .WithDescription("Bulk import results from files matching a pattern")
+        .WithExample(["import", "results/*.txt"]);
+
     // Aggregate command - combine all results
     config.AddCommand<AggregateCommand>("aggregate")
         .WithDescription("Combine all stored results for final synthesis");

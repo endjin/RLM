@@ -15,19 +15,25 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class SliceCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<SliceCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<range>")]
         [Description("Slice range (e.g., '0:1000', '-500:', ':1000')")]
         public string Range { get; set; } = string.Empty;
+
+        [CommandOption("--raw")]
+        [Description("Output raw content for piping/scripts.")]
+        public bool Raw { get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasDocument)
         {
+            if (settings.Raw) return 1;
+
             console.MarkupLine("[red]Error:[/] No document loaded. Use [cyan]rlm load <file>[/] first.");
             return 1;
         }
@@ -37,11 +43,19 @@ public sealed class SliceCommand(IAnsiConsole console, ISessionStore sessionStor
 
         if (start < 0 || end > content.Length || start > end)
         {
+            if (settings.Raw) return 1;
+
             console.MarkupLine($"[red]Error:[/] Invalid range. Document length is {content.Length:N0} chars.");
             return 1;
         }
 
         string slice = content[start..end];
+
+        if (settings.Raw)
+        {
+            Console.WriteLine(slice);
+            return 0;
+        }
 
         // Output slice info
         console.MarkupLine($"[cyan]Slice:[/] {start:N0}..{end:N0} ({slice.Length:N0} chars)");

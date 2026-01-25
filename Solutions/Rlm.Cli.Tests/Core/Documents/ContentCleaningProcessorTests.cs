@@ -28,7 +28,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert - Multiple spaces are normalized to single space
         result.Content.ShouldBe("Hello World");
@@ -50,7 +50,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldNotContain("<!--");
@@ -69,7 +69,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert - Multiple spaces are normalized to single space
         result.Content.ShouldBe("Click for nothing");
@@ -84,7 +84,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert - Multiple spaces are normalized to single space
         result.Content.ShouldBe("Click for nothing");
@@ -99,7 +99,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert - Multiple blank lines are reduced (regex replaces 3+ newlines with 2)
         result.Content.ShouldNotContain("\n\n\n");
@@ -116,7 +116,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldBe("Hello World Test");
@@ -131,7 +131,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldBe("Hello World");
@@ -146,7 +146,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldBe("Line 1\nLine 2\nLine 3");
@@ -161,7 +161,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldBe("Content");
@@ -176,7 +176,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.TotalLength.ShouldBe(result.Content.Length);
@@ -194,7 +194,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Id.ShouldBe("my-document-id");
@@ -222,7 +222,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldBe("");
@@ -237,7 +237,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldContain("[here](http://example.com)");
@@ -265,7 +265,7 @@ public sealed class ContentCleaningProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldNotContain("<!-- Header comment -->");
@@ -277,4 +277,6 @@ public sealed class ContentCleaningProcessorTests
         result.Content.ShouldContain("here and there");
         result.Content.ShouldContain("End of document.");
     }
+
+    public TestContext TestContext { get; set; }
 }

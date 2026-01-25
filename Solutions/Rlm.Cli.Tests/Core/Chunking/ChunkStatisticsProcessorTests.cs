@@ -28,7 +28,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("wordCount");
@@ -44,7 +44,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("lineCount");
@@ -61,7 +61,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("charCount");
@@ -77,7 +77,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("charCountNoWhitespace");
@@ -93,7 +93,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata["wordCount"].ShouldBe("0");
@@ -112,7 +112,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ShouldContainKey("existingKey");
@@ -128,7 +128,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata["wordCount"].ShouldBe("5"); // Hello, world, How, are, you
@@ -143,7 +143,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata["lineCount"].ShouldBe("6");
@@ -158,7 +158,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata["charCountNoWhitespace"].ShouldBe("11"); // "HelloWorld!"
@@ -187,7 +187,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Metadata["lineCount"].ShouldBe("1000");
@@ -205,7 +205,7 @@ public sealed class ChunkStatisticsProcessorTests
             .Build();
 
         // Act
-        ContentChunk result = await processor.ProcessAsync(chunk);
+        ContentChunk result = await processor.ProcessAsync(chunk, TestContext.CancellationToken);
 
         // Assert
         result.Index.ShouldBe(5);
@@ -213,4 +213,6 @@ public sealed class ChunkStatisticsProcessorTests
         result.StartPosition.ShouldBe(100);
         result.EndPosition.ShouldBe(200);
     }
+
+    public TestContext TestContext { get; set; }
 }

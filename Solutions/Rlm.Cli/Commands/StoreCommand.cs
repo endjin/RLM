@@ -15,7 +15,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class StoreCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<StoreCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<key>")]
         [Description("Key to identify this result (e.g., 'chunk_0', 'section_intro')")]
@@ -28,11 +28,21 @@ public sealed class StoreCommand(IAnsiConsole console, ISessionStore sessionStor
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
+
+        string valueToStore = settings.Value;
+
+        // Support reading from stdin if value is "-"
+        if (valueToStore == "-")
+        {
+            // Don't close standard input, just read
+            using StreamReader reader = new(Console.OpenStandardInput());
+            valueToStore = await reader.ReadToEndAsync(cancellationToken);
+        }
 
         // Store the result
-        session.Results[settings.Key] = settings.Value;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        session.Results[settings.Key] = valueToStore;
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         console.MarkupLine($"[green]Stored:[/] {settings.Key}");
         console.MarkupLine($"[cyan]Total results:[/] {session.Results.Count}");

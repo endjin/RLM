@@ -102,7 +102,7 @@ public sealed class RlmSessionBuilder
 
     public RlmSessionBuilder WithResults(Dictionary<string, string> results)
     {
-        this.results = new Dictionary<string, string>(results);
+        this.results = new(results);
         return this;
     }
 

@@ -14,11 +14,11 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class ResultsCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<ResultsCommand.Settings>
 {
-    public sealed class Settings : CommandSettings;
+    public sealed class Settings : RlmCommandSettings;
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (session.Results.Count == 0)
         {

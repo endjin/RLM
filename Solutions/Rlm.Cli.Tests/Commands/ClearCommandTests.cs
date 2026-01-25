@@ -25,17 +25,17 @@ public sealed class ClearCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new ClearCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_EmptySession_ReturnsSuccessWithMessage()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
@@ -54,13 +54,13 @@ public sealed class ClearCommandTests
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedDocument().Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
@@ -74,13 +74,13 @@ public sealed class ClearCommandTests
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(3).Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Chunk buffer cleared");
@@ -92,13 +92,13 @@ public sealed class ClearCommandTests
         // Arrange
         RlmSession session = RlmSessionBuilder.WithStoredResults().Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Results removed");
@@ -110,13 +110,13 @@ public sealed class ClearCommandTests
         // Arrange
         RlmSession session = RlmSessionBuilder.WithStoredResults().Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         session.Content.ShouldBeNull();
@@ -131,13 +131,13 @@ public sealed class ClearCommandTests
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedDocument().Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         sessionStore.Received(1).Delete();
@@ -154,13 +154,13 @@ public sealed class ClearCommandTests
             .WithResult("key", "value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ClearCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Session cleared");
@@ -172,7 +172,7 @@ public sealed class ClearCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "clear", null);
+        return new([], remaining, "clear", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

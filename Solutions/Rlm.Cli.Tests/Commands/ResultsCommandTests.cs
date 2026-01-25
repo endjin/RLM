@@ -25,22 +25,22 @@ public sealed class ResultsCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new ResultsCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoResults_ReturnsSuccessWithMessage()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
@@ -56,12 +56,12 @@ public sealed class ResultsCommandTests
             .WithResult("b", "2")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Stored results: 2");
@@ -75,12 +75,12 @@ public sealed class ResultsCommandTests
             .WithResult("key1", "value1")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Key");
@@ -96,13 +96,13 @@ public sealed class ResultsCommandTests
             .WithResult("key", longValue)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("...");
@@ -120,13 +120,13 @@ public sealed class ResultsCommandTests
             .WithResult("m_key", "m value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         string output = console.Output;
@@ -142,12 +142,12 @@ public sealed class ResultsCommandTests
     public async Task ExecuteAsync_SuggestsStoreCommand_WhenNoResults()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("rlm store");
@@ -161,14 +161,14 @@ public sealed class ResultsCommandTests
             .WithResult("key", "[bold]This has markup[/]")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
         // Should not throw due to unescaped markup
-        await command.ExecuteAsync(context, new ResultsCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("bold");
@@ -177,7 +177,7 @@ public sealed class ResultsCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "results", null);
+        return new([], remaining, "results", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

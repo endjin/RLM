@@ -23,9 +23,9 @@ public sealed class JumpCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new JumpCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
@@ -33,7 +33,7 @@ public sealed class JumpCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.Empty().Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "1" };
         CommandContext context = CreateCommandContext();
@@ -51,7 +51,7 @@ public sealed class JumpCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.Empty().Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "1", Json = true };
         CommandContext context = CreateCommandContext();
@@ -72,7 +72,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "3" }; // Jump to chunk 3 (1-based)
         CommandContext context = CreateCommandContext();
@@ -85,7 +85,7 @@ public sealed class JumpCommandTests
         console.Output.ShouldContain("Jumped from chunk 1 to 3");
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 2), // 0-based index
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -95,7 +95,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(10)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "50%" }; // Jump to 50%
         CommandContext context = CreateCommandContext();
@@ -108,7 +108,7 @@ public sealed class JumpCommandTests
         // 50% of 10 chunks = chunk 5 (1-based), which is index 4 (0-based)
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 4),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -116,7 +116,7 @@ public sealed class JumpCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5).Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "abc%" };
         CommandContext context = CreateCommandContext();
@@ -134,7 +134,7 @@ public sealed class JumpCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5).Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "abc" };
         CommandContext context = CreateCommandContext();
@@ -154,7 +154,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "100" }; // Way beyond range
         CommandContext context = CreateCommandContext();
@@ -166,7 +166,7 @@ public sealed class JumpCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 4), // Clamped to last chunk (index 4)
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -176,7 +176,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(2)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "-5" };
         CommandContext context = CreateCommandContext();
@@ -188,7 +188,7 @@ public sealed class JumpCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 0), // Clamped to first chunk
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -198,7 +198,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "3", Json = true };
         CommandContext context = CreateCommandContext();
@@ -220,7 +220,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(10)
             .WithCurrentChunkIndex(5)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "0%" };
         CommandContext context = CreateCommandContext();
@@ -232,7 +232,7 @@ public sealed class JumpCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 0),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -242,7 +242,7 @@ public sealed class JumpCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(10)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         JumpCommand.Settings settings = new() { Target = "100%" };
         CommandContext context = CreateCommandContext();
@@ -254,13 +254,13 @@ public sealed class JumpCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 9), // Last chunk
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "jump", null);
+        return new([], remaining, "jump", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

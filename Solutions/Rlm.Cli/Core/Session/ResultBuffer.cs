@@ -37,7 +37,7 @@ public sealed class ResultBuffer
     /// <param name="separator">Separator between results.</param>
     /// <returns>Combined string of all results.</returns>
     public string GetCombined(string separator = "\n\n---\n\n")
-        => string.Join(separator, results.Select(kv => $"[{kv.Key}]\n{kv.Value}"));
+        => string.Join(separator, results.OrderBy(kv => kv.Key).Select(kv => $"[{kv.Key}]\n{kv.Value}"));
 
     /// <summary>
     /// Number of stored results.

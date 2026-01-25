@@ -17,7 +17,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class AggregateCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<AggregateCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandOption("-s|--separator <separator>")]
         [Description("Separator between results (default: newline with dashes)")]
@@ -30,14 +30,23 @@ public sealed class AggregateCommand(IAnsiConsole console, ISessionStore session
         [CommandOption("-f|--final")]
         [Description("Wrap output with FINAL signal for completion detection")]
         public bool Final { get; set; }
+
+        [CommandOption("--raw")]
+        [Description("Output raw content for piping/scripts.")]
+        public bool Raw { get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (session.Results.Count == 0)
         {
+            if (settings.Raw)
+            {
+                return 0;
+            }
+
             if (settings.Json)
             {
                 console.WriteLine("{\"error\": \"No results to aggregate\"}");
@@ -53,6 +62,12 @@ public sealed class AggregateCommand(IAnsiConsole console, ISessionStore session
         ResultBuffer buffer = session.ToResultBuffer();
         string separator = settings.Separator ?? "\n\n---\n\n";
         string combined = buffer.GetCombined(separator);
+
+        if (settings.Raw)
+        {
+            Console.WriteLine(combined);
+            return 0;
+        }
 
         if (settings.Json)
         {

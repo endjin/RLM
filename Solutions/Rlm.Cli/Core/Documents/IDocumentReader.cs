@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Runtime.CompilerServices;
+using Spectre.IO;
 
 namespace Rlm.Cli.Core.Documents;
 
@@ -72,9 +73,47 @@ public static class DocumentReaderExtensions
         // Unit tests use a Linux fake filesystem where those paths must remain unchanged.
         string path = source;
 
-        if (IsWindowsDriveRelativePath(path) || !Path.IsPathRooted(path))
+        if (IsWindowsDriveRelativePath(path) || !System.IO.Path.IsPathRooted(path))
         {
-            path = Path.GetFullPath(path);
+            path = System.IO.Path.GetFullPath(path);
+        }
+
+        return CreateFileUriFromPath(path);
+    }
+
+    /// <summary>
+    /// Converts a string source to a Uri for document reading using Spectre.IO.
+    /// Supports file paths, "-" for stdin, and explicit URIs.
+    /// </summary>
+    /// <param name="source">The source string to convert.</param>
+    /// <param name="environment">The Spectre.IO environment for path resolution.</param>
+    /// <returns>A Uri representing the source.</returns>
+    public static Uri ToSourceUri(this string source, IEnvironment environment)
+    {
+        if (source == "-")
+        {
+            return new Uri("stdin://input");
+        }
+
+        if (Uri.TryCreate(source, UriKind.Absolute, out Uri? uri))
+        {
+            // If it's already a URI, keep it (including file:// URIs).
+            if (!string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
+            {
+                return uri;
+            }
+
+            return uri;
+        }
+
+        // Treat as a file path using Spectre.IO.
+        string path = source;
+        FilePath filePath = new(path);
+
+        if (IsWindowsDriveRelativePath(path) || filePath.IsRelative)
+        {
+            filePath = filePath.MakeAbsolute(environment);
+            path = filePath.FullPath;
         }
 
         return CreateFileUriFromPath(path);
