@@ -18,7 +18,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class JumpCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<JumpCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<index>")]
         [Description("Target chunk index (1-based) or percentage with % suffix (e.g., 50%)")]
@@ -27,14 +27,20 @@ public sealed class JumpCommand(IAnsiConsole console, ISessionStore sessionStore
         [CommandOption("-j|--json")]
         [Description("Output in JSON format for machine parsing")]
         public bool Json { get; set; }
+
+        [CommandOption("--raw")]
+        [Description("Output raw content for piping/scripts.")]
+        public bool Raw { get; set; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasChunks)
         {
+            if (settings.Raw) return 1;
+
             if (settings.Json)
             {
                 console.WriteLine("{\"error\": \"No chunks available\"}");
@@ -77,9 +83,15 @@ public sealed class JumpCommand(IAnsiConsole console, ISessionStore sessionStore
 
         int previousIndex = session.CurrentChunkIndex;
         session.CurrentChunkIndex = targetIndex;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         ContentChunk chunk = session.CurrentChunk!;
+
+        if (settings.Raw)
+        {
+            Console.WriteLine(chunk.Content);
+            return 0;
+        }
 
         if (settings.Json)
         {

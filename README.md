@@ -87,9 +87,46 @@ rlm aggregate
 | `skip <count>`      | Skip forward/backward       | `rlm skip 10`                   |
 | `jump <index>`      | Jump to chunk index or %    | `rlm jump 50%`                  |
 | `store <key> <val>` | Store partial result        | `rlm store chunk_0 "result"`    |
+| `import <pattern>`  | Import external results     | `rlm import "child-*.json"`     |
 | `results`           | List stored results         | `rlm results`                   |
 | `aggregate`         | Combine all results         | `rlm aggregate --final`         |
 | `clear`             | Reset session               | `rlm clear`                     |
+| `clear --all`       | Reset all sessions          | `rlm clear --all`               |
+
+## Recursive RLM & Parallel Processing
+
+RLM supports recursive decomposition through session isolation and raw output modes.
+
+### Session Management
+Use the global `--session <id>` flag to isolate state for parallel or recursive processes:
+```bash
+# Parent process
+rlm load large.txt --session parent
+
+# Child process (simulated recursion)
+rlm load chunk_1.txt --session child_1
+rlm chunk ... --session child_1
+```
+
+### Scripting & Piping
+Use `--raw` for pipe-friendly output without formatting:
+```bash
+# Get raw content of next chunk
+rlm next --raw --session child_1 | process_script.sh
+
+# Pipe content into store
+echo "result" | rlm store chunk_1 - --session parent
+```
+
+### Bulk Import
+Import results from child sessions or external files:
+```bash
+# Import results directly from session files
+rlm import "rlm-session-child_*.json" --session parent
+
+# Import results from text files (key = filename)
+rlm import "summaries/*.txt" --session parent
+```
 
 ## Chunking Strategies
 

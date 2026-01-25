@@ -14,15 +14,20 @@ public interface ISessionStore
     /// <summary>
     /// Loads the current session from disk, or creates a new one if none exists.
     /// </summary>
-    Task<RlmSession> LoadAsync(CancellationToken cancellationToken = default);
+    Task<RlmSession> LoadAsync(string? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves the current session to disk.
     /// </summary>
-    Task SaveAsync(RlmSession session, CancellationToken cancellationToken = default);
+    Task SaveAsync(RlmSession session, string? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the session file.
     /// </summary>
-    void Delete();
+    void Delete(string? sessionId = null);
+
+    /// <summary>
+    /// Deletes all RLM session files in the storage location.
+    /// </summary>
+    void DeleteAll();
 }

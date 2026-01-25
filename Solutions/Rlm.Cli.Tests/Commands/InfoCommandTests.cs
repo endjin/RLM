@@ -25,23 +25,23 @@ public sealed class InfoCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new InfoCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoDocument_ReturnsSuccessWithMessage()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
@@ -60,13 +60,13 @@ public sealed class InfoCommandTests
                 .WithLineCount(50))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Source");
@@ -84,12 +84,12 @@ public sealed class InfoCommandTests
             .WithCurrentChunkIndex(2)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Chunks:");
@@ -108,12 +108,12 @@ public sealed class InfoCommandTests
             .WithResult("key3", "value3")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Stored results: 3");
@@ -136,13 +136,13 @@ public sealed class InfoCommandTests
             .WithResult("key7", "v7")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Stored results: 7");
@@ -159,13 +159,13 @@ public sealed class InfoCommandTests
             .WithMetadata(m => m.WithLoadedAt(loadedAt))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Loaded at");
@@ -181,13 +181,13 @@ public sealed class InfoCommandTests
             .WithMetadata(m => m.WithTotalLength(400).WithTokenEstimate(100))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Tokens");
@@ -198,12 +198,12 @@ public sealed class InfoCommandTests
     public async Task ExecuteAsync_SuggestsLoadCommand_WhenNoDocument()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new InfoCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("rlm load");
@@ -212,7 +212,7 @@ public sealed class InfoCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "info", null);
+        return new([], remaining, "info", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

@@ -5,6 +5,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Spectre.IO;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
@@ -14,7 +15,7 @@ namespace Rlm.Cli.Core.Documents;
 /// Reads PDF documents using PdfPig library.
 /// Extracts text content and PDF-specific metadata (pages, title, author).
 /// </summary>
-public sealed partial class PdfDocumentReader : IDocumentReader
+public sealed partial class PdfDocumentReader(IFileSystem fileSystem) : IDocumentReader
 {
     public bool CanRead(Uri source)
     {
@@ -23,7 +24,8 @@ public sealed partial class PdfDocumentReader : IDocumentReader
             return false;
         }
 
-        string extension = Path.GetExtension(source.LocalPath).ToLowerInvariant();
+        FilePath filePath = new(source.LocalPath);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension == ".pdf";
     }
 
@@ -35,7 +37,8 @@ public sealed partial class PdfDocumentReader : IDocumentReader
         }
 
         string path = source.LocalPath;
-        if (!File.Exists(path))
+        FilePath filePath = new(path);
+        if (!fileSystem.File.Exists(filePath))
         {
             return Task.FromResult<RlmDocument?>(null);
         }
@@ -77,9 +80,10 @@ public sealed partial class PdfDocumentReader : IDocumentReader
             // Calculate reading time (200 words per minute)
             int readingTime = Math.Max(1, wordCount / 200);
 
+            FilePath filePath = new(path);
             return new RlmDocument
             {
-                Id = Path.GetFileName(path),
+                Id = filePath.GetFilename().ToString(),
                 Content = text,
                 Metadata = new DocumentMetadata
                 {

@@ -21,7 +21,7 @@ public sealed class ContentChunkTests
             Content = "Test content",
             StartPosition = 0,
             EndPosition = 12,
-            Metadata = new Dictionary<string, string> { ["key"] = "value" }
+            Metadata = new() { ["key"] = "value" }
         };
 
         // Assert

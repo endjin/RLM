@@ -22,7 +22,7 @@ public sealed class DocumentProcessorChainTests
             .Build();
 
         // Act
-        RlmDocument result = await chain.ProcessAsync(document);
+        RlmDocument result = await chain.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(document);
@@ -46,7 +46,7 @@ public sealed class DocumentProcessorChainTests
         DocumentProcessorChain chain = new(processor);
 
         // Act
-        RlmDocument result = await chain.ProcessAsync(inputDoc);
+        RlmDocument result = await chain.ProcessAsync(inputDoc, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(processedDoc);
@@ -73,7 +73,7 @@ public sealed class DocumentProcessorChainTests
         DocumentProcessorChain chain = new(processor1, processor2, processor3);
 
         // Act
-        RlmDocument result = await chain.ProcessAsync(doc0);
+        RlmDocument result = await chain.ProcessAsync(doc0, TestContext.CancellationToken);
 
         // Assert
         result.ShouldBe(doc3);
@@ -151,7 +151,7 @@ public sealed class DocumentProcessorChainTests
             .Build();
 
         // Act
-        RlmDocument result = await chain.ProcessAsync(document);
+        RlmDocument result = await chain.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         // Content should be cleaned
@@ -179,4 +179,6 @@ public sealed class DocumentProcessorChainTests
         // Assert
         chain.Count.ShouldBe(2);
     }
+
+    public TestContext TestContext { get; set; }
 }

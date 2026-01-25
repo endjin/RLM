@@ -18,7 +18,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class ChunkCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<ChunkCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandOption("-s|--strategy <strategy>")]
         [Description("Chunking strategy: uniform, filter, semantic, token, recursive, auto")]
@@ -87,7 +87,7 @@ public sealed class ChunkCommand(IAnsiConsole console, ISessionStore sessionStor
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasDocument)
         {
@@ -151,7 +151,7 @@ public sealed class ChunkCommand(IAnsiConsole console, ISessionStore sessionStor
         // Update session
         session.ChunkBuffer = chunks;
         session.CurrentChunkIndex = 0;
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         stopwatch.Stop();
 

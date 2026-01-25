@@ -371,9 +371,86 @@ rlm store errors "Found 12 failed API calls"
 - Processing configuration files
 - Extracting data from JSON exports
 
+## Recursive Directory Loading with Glob Patterns
+
+Load markdown files from nested directories using recursive glob patterns.
+
+```bash
+# 1. Load all markdown files recursively from docs/
+rlm load ./docs/ --pattern "**/*.md"
+# Output: Loaded 15 documents (3.2s)
+#         - docs/README.md: 5,230 chars
+#         - docs/guides/getting-started.md: 12,450 chars
+#         - docs/guides/advanced/configuration.md: 8,920 chars
+#         - docs/api/endpoints.md: 45,230 chars
+#         - ... (11 more files)
+#         Total: 289,400 chars, ~72,350 tokens
+
+# 2. Check what was loaded
+rlm info
+# Shows combined metadata from all files
+
+# 3. Process with semantic chunking
+rlm chunk --strategy semantic --min-size 5000 --merge-small
+
+# 4. Search across all documentation
+rlm filter "authentication|API key"
+rlm store auth_findings "Found auth docs in 3 sections..."
+```
+
+**Common glob patterns:**
+
+| Pattern         | Matches                              |
+|-----------------|--------------------------------------|
+| `*.md`          | Markdown files in directory only     |
+| `**/*.md`       | Markdown files in all subdirectories |
+| `**/*.{md,txt}` | Markdown and text files recursively  |
+| `src/**/*.cs`   | C# files under src/ directory        |
+
+**When to use:**
+- Analyzing entire project documentation trees
+- Building knowledge bases from scattered files
+- Searching across multi-level directory structures
+
+## Parallel Processing with Sub-Agents
+
+For very large documents (10+ chunks), spawn worker agents to process in parallel.
+
+```bash
+# 1. Parent: Initialize and chunk
+rlm load massive-codebase.md --session parent
+rlm chunk --strategy uniform --size 30000 --session parent
+# Output: Created 45 chunk(s)
+
+# 2. Parent: Extract chunks for workers
+rlm next --raw --session parent > chunk_0.txt
+# SPAWN: rlm-worker agent with "Process chunk_0.txt, session=child_0"
+
+rlm next --raw --session parent > chunk_1.txt
+# SPAWN: rlm-worker agent with "Process chunk_1.txt, session=child_1"
+
+# ... continue for all chunks ...
+
+# 3. After all workers complete: Import and aggregate
+rlm import "rlm-session-child_*.json" --session parent
+rlm aggregate --session parent
+```
+
+**When to use:**
+- Documents with 10+ independent chunks
+- Tasks that don't require context from previous chunks
+- Extraction, counting, or search tasks
+
+See [agent-guide.md](agent-guide.md) for the complete parallel processing protocol, including decision criteria for when to use parallel vs sequential processing.
+
+---
+
 ## Related Documentation
 
-- [SKILL.md](SKILL.md) - Overview and workflow
-- [strategies.md](strategies.md) - All chunking strategies with options
-- [reference.md](reference.md) - JSON output formats and session file
-- [troubleshooting.md](troubleshooting.md) - Tips and error handling
+| Topic           | File                                     | Description                      |
+|-----------------|------------------------------------------|----------------------------------|
+| Overview        | [SKILL.md](SKILL.md)                     | Quick start and workflow         |
+| Strategies      | [strategies.md](strategies.md)           | Chunking strategy selection      |
+| Reference       | [reference.md](reference.md)             | Command options and JSON formats |
+| Agent Guide     | [agent-guide.md](agent-guide.md)         | Parallel processing protocol     |
+| Troubleshooting | [troubleshooting.md](troubleshooting.md) | Errors and solutions             |

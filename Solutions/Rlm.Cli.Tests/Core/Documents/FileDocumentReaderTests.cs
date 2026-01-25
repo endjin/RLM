@@ -18,8 +18,8 @@ public sealed class FileDocumentReaderTests
     public void Setup()
     {
         FakeEnvironment environment = FakeEnvironment.CreateLinuxEnvironment();
-        fileSystem = new FakeFileSystem(environment);
-        reader = new FileDocumentReader(fileSystem);
+        fileSystem = new(environment);
+        reader = new(fileSystem);
     }
 
     [TestMethod]

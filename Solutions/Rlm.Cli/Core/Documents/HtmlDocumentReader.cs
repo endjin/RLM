@@ -5,6 +5,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using ReverseMarkdown;
+using Spectre.IO;
 
 namespace Rlm.Cli.Core.Documents;
 
@@ -12,7 +13,7 @@ namespace Rlm.Cli.Core.Documents;
 /// Reads HTML documents and converts them to Markdown for consistent processing.
 /// Uses ReverseMarkdown to preserve semantic structure (headers, lists, code blocks).
 /// </summary>
-public sealed partial class HtmlDocumentReader : IDocumentReader
+public sealed partial class HtmlDocumentReader(IFileSystem fileSystem) : IDocumentReader
 {
     private readonly Converter _converter = new(new Config
     {
@@ -29,7 +30,8 @@ public sealed partial class HtmlDocumentReader : IDocumentReader
             return false;
         }
 
-        string extension = Path.GetExtension(source.LocalPath).ToLowerInvariant();
+        FilePath filePath = new(source.LocalPath);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension is ".html" or ".htm";
     }
 
@@ -41,12 +43,14 @@ public sealed partial class HtmlDocumentReader : IDocumentReader
         }
 
         string path = source.LocalPath;
-        if (!File.Exists(path))
+        FilePath filePath = new(path);
+        if (!fileSystem.File.Exists(filePath))
         {
             return null;
         }
 
-        string html = await File.ReadAllTextAsync(path, cancellationToken);
+        IFile file = fileSystem.GetFile(filePath);
+        string html = await file.ReadAllTextAsync();
         return ConvertHtmlToDocument(source, html);
     }
 
@@ -83,9 +87,10 @@ public sealed partial class HtmlDocumentReader : IDocumentReader
         // Calculate reading time (200 words per minute)
         int readingTime = Math.Max(1, wordCount / 200);
 
+        FilePath filePath = new(path);
         return new RlmDocument
         {
-            Id = title ?? Path.GetFileName(path),
+            Id = title ?? filePath.GetFilename().ToString(),
             Content = markdown,
             Metadata = new DocumentMetadata
             {

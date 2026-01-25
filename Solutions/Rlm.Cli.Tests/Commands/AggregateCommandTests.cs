@@ -25,17 +25,17 @@ public sealed class AggregateCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new AggregateCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoResults_ReturnsSuccessWithMessage()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         AggregateCommand.Settings settings = new();
@@ -58,7 +58,7 @@ public sealed class AggregateCommandTests
             .WithResult("chunk_1", "Second result")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new();
@@ -82,7 +82,7 @@ public sealed class AggregateCommandTests
             .WithResult("b", "Result B")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new();
@@ -104,7 +104,7 @@ public sealed class AggregateCommandTests
             .WithResult("b", "Result B")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new() { Separator = "|||CUSTOM|||" };
@@ -127,7 +127,7 @@ public sealed class AggregateCommandTests
             .WithResult("c", "3")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new();
@@ -148,7 +148,7 @@ public sealed class AggregateCommandTests
             .WithResult("my_key", "My value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new();
@@ -165,7 +165,7 @@ public sealed class AggregateCommandTests
     public async Task ExecuteAsync_SuggestsStoreCommand_WhenNoResults()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         AggregateCommand.Settings settings = new();
@@ -187,7 +187,7 @@ public sealed class AggregateCommandTests
             .WithResult("chunk_1", "Second result")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new() { Json = true };
@@ -206,7 +206,7 @@ public sealed class AggregateCommandTests
     public async Task ExecuteAsync_JsonOutput_NoResults_ReturnsErrorJson()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         AggregateCommand.Settings settings = new() { Json = true };
@@ -227,7 +227,7 @@ public sealed class AggregateCommandTests
             .WithResult("key", "value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new() { Final = true };
@@ -248,7 +248,7 @@ public sealed class AggregateCommandTests
             .WithResult("key", "value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new() { Json = true, Final = true };
@@ -269,7 +269,7 @@ public sealed class AggregateCommandTests
             .WithResult("key", "value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         AggregateCommand.Settings settings = new() { Json = true, Final = false };
@@ -285,7 +285,7 @@ public sealed class AggregateCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "aggregate", null);
+        return new([], remaining, "aggregate", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

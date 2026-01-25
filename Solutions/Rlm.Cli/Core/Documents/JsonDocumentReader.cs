@@ -4,6 +4,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Spectre.IO;
 
 namespace Rlm.Cli.Core.Documents;
 
@@ -11,7 +12,7 @@ namespace Rlm.Cli.Core.Documents;
 /// Reads JSON documents and formats them for readability.
 /// Extracts element count and pretty-prints the JSON content.
 /// </summary>
-public sealed class JsonDocumentReader : IDocumentReader
+public sealed class JsonDocumentReader(IFileSystem fileSystem) : IDocumentReader
 {
     private static readonly JsonSerializerOptions PrettyPrintOptions = new()
     {
@@ -25,7 +26,8 @@ public sealed class JsonDocumentReader : IDocumentReader
             return false;
         }
 
-        string extension = Path.GetExtension(source.LocalPath).ToLowerInvariant();
+        FilePath filePath = new(source.LocalPath);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension == ".json";
     }
 
@@ -37,12 +39,14 @@ public sealed class JsonDocumentReader : IDocumentReader
         }
 
         string path = source.LocalPath;
-        if (!File.Exists(path))
+        FilePath filePath = new(path);
+        if (!fileSystem.File.Exists(filePath))
         {
             return null;
         }
 
-        string json = await File.ReadAllTextAsync(path, cancellationToken);
+        IFile file = fileSystem.GetFile(filePath);
+        string json = await file.ReadAllTextAsync();
         return ParseJson(source, json);
     }
 
@@ -73,9 +77,10 @@ public sealed class JsonDocumentReader : IDocumentReader
             // Extract element count
             int elementCount = CountElements(doc.RootElement);
 
+            FilePath filePath = new(path);
             return new RlmDocument
             {
-                Id = Path.GetFileName(path),
+                Id = filePath.GetFilename().ToString(),
                 Content = formatted,
                 Metadata = new DocumentMetadata
                 {

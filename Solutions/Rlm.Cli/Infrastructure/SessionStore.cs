@@ -13,7 +13,7 @@ namespace Rlm.Cli.Infrastructure;
 /// <summary>
 /// Persists RLM session state to disk for multi-turn processing.
 /// </summary>
-public sealed class SessionStore(IFileSystem fileSystem) : ISessionStore
+public sealed class SessionStore(IFileSystem fileSystem, IEnvironment environment) : ISessionStore
 {
     private const string SessionFileName = ".rlm-session.json";
     private const int MaxRetries = 3;
@@ -31,18 +31,45 @@ public sealed class SessionStore(IFileSystem fileSystem) : ISessionStore
         })
         .Build();
 
-    private FilePath GetSessionPath()
+    private DirectoryPath GetHomeDirectory()
     {
-        string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-        return new DirectoryPath(home).CombineWithFilePath(SessionFileName);
+        // Try HOME (Unix) first, then USERPROFILE (Windows)
+        string? home = environment.GetEnvironmentVariable("HOME")
+            ?? environment.GetEnvironmentVariable("USERPROFILE");
+
+        if (string.IsNullOrEmpty(home))
+        {
+            // Fallback to System.Environment for production use
+            home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        }
+
+        return new DirectoryPath(home);
+    }
+
+    private FilePath GetSessionPath(string? sessionId)
+    {
+        DirectoryPath home = GetHomeDirectory();
+
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            return home.CombineWithFilePath(SessionFileName);
+        }
+
+        // Security check: Prevent path traversal
+        if (sessionId.Any(c => !char.IsLetterOrDigit(c) && c != '-' && c != '_'))
+        {
+            throw new ArgumentException("Session ID must contain only alphanumeric characters, hyphens, or underscores.", nameof(sessionId));
+        }
+
+        return home.CombineWithFilePath($"rlm-session-{sessionId}.json");
     }
 
     /// <summary>
     /// Loads the current session from disk, or creates a new one if none exists.
     /// </summary>
-    public async Task<RlmSession> LoadAsync(CancellationToken cancellationToken = default)
+    public async Task<RlmSession> LoadAsync(string? sessionId = null, CancellationToken cancellationToken = default)
     {
-        FilePath path = GetSessionPath();
+        FilePath path = GetSessionPath(sessionId);
 
         if (!fileSystem.File.Exists(path))
         {
@@ -70,9 +97,9 @@ public sealed class SessionStore(IFileSystem fileSystem) : ISessionStore
     /// <summary>
     /// Saves the current session to disk.
     /// </summary>
-    public async Task SaveAsync(RlmSession session, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(RlmSession session, string? sessionId = null, CancellationToken cancellationToken = default)
     {
-        FilePath path = GetSessionPath();
+        FilePath path = GetSessionPath(sessionId);
         string json = JsonSerializer.Serialize(session, RlmJsonContext.Default.RlmSession);
 
         await RetryPipeline.ExecuteAsync(async _ =>
@@ -85,15 +112,48 @@ public sealed class SessionStore(IFileSystem fileSystem) : ISessionStore
     /// <summary>
     /// Deletes the session file.
     /// </summary>
-    public void Delete()
+    public void Delete(string? sessionId = null)
     {
-        FilePath path = GetSessionPath();
+        FilePath path = GetSessionPath(sessionId);
         if (fileSystem.File.Exists(path))
         {
             RetryPipeline.Execute(() =>
             {
                 fileSystem.File.Delete(path);
             });
+        }
+    }
+
+    /// <summary>
+    /// Deletes all RLM session files in the storage location.
+    /// </summary>
+    public void DeleteAll()
+    {
+        DirectoryPath directory = GetHomeDirectory();
+        
+        // Delete all session files matching known patterns
+        try 
+        {
+            IDirectory dir = fileSystem.GetDirectory(directory);
+            if (dir.Exists)
+            {
+                // Default session: .rlm-session.json
+                // Named sessions: rlm-session-*.json
+                
+                foreach (IFile file in dir.GetFiles("rlm-session-*.json", SearchScope.Current))
+                {
+                     RetryPipeline.Execute(() => file.Delete());
+                }
+                
+                foreach (IFile file in dir.GetFiles(".rlm-session.json", SearchScope.Current))
+                {
+                     RetryPipeline.Execute(() => file.Delete());
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Best effort cleanup
         }
     }
 }

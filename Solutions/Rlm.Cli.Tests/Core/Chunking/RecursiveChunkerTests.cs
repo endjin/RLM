@@ -98,7 +98,7 @@ public sealed class RecursiveChunkerTests
     {
         // Arrange
         // Create content without any separators
-        string content = new string('x', 200);
+        string content = new('x', 200);
         RlmDocument document = RlmDocumentBuilder.Default()
             .WithContent(content)
             .Build();

@@ -14,13 +14,38 @@
     <!-- Ensure restore includes RID-specific targets used by build packaging/publish steps -->
     <!-- <RuntimeIdentifiers>win-x64</RuntimeIdentifiers> -->
 
-    <!-- AOT Configuration -->
-    <PublishAot Condition="'$(SelfContained)' == 'true'">true</PublishAot>
-    <PublishAot Condition="'$(SelfContained)' != 'true'">false</PublishAot>
+    <!-- Publishing Mode Configuration -->
+    <!-- PublishMode: AOT (default for self-contained), SingleFile, or None -->
+    <PublishMode Condition="'$(PublishMode)' == '' AND '$(SelfContained)' == 'true'">AOT</PublishMode>
+    <PublishMode Condition="'$(PublishMode)' == ''">None</PublishMode>
+
+    <!-- Native AOT Configuration (default for self-contained) -->
+    <PublishAot Condition="'$(PublishMode)' == 'AOT'">true</PublishAot>
     <IsAotCompatible>true</IsAotCompatible>
 
+    <!-- SingleFile+Trimmed Configuration -->
+    <PublishSingleFile Condition="'$(PublishMode)' == 'SingleFile'">true</PublishSingleFile>
+    <PublishTrimmed Condition="'$(PublishMode)' == 'SingleFile'">true</PublishTrimmed>
+    <SelfContained Condition="'$(PublishMode)' == 'SingleFile'">true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract Condition="'$(PublishMode)' == 'SingleFile'">true</IncludeNativeLibrariesForSelfExtract>
+
     <!-- Suppress expected warnings for dynamic regex patterns and Spectre.Console.Cli type registration -->
-    <NoWarn>$(NoWarn);IL2026;IL2067;IL3050</NoWarn>
+    <!-- IL2104: Third-party libraries (ReverseMarkdown, Spectre.Console.Cli) produce internal trim warnings -->
+    <!-- IL3000: Assembly.Location returns empty in AOT/single-file apps; Spectre handles this gracefully -->
+    <NoWarn>$(NoWarn);IL2026;IL2067;IL2104;IL3000;IL3050</NoWarn>
+  </PropertyGroup>
+
+  <!-- AOT-specific optimizations -->
+  <PropertyGroup Condition="'$(PublishMode)' == 'AOT'">
+    <StripSymbols>true</StripSymbols>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+  </PropertyGroup>
+
+  <!-- SingleFile+Trimmed optimizations -->
+  <PropertyGroup Condition="'$(PublishMode)' == 'SingleFile'">
+    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <PropertyGroup>

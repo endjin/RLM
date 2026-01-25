@@ -100,7 +100,7 @@ public sealed class UniformChunkerTests
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default()
             .WithId("doc-123")
-            .WithContent(new string('x', 150))
+            .WithContent(new('x', 150))
             .Build();
         UniformChunker chunker = new(chunkSize: 100);
 
@@ -121,7 +121,7 @@ public sealed class UniformChunkerTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default()
-            .WithContent(new string('x', 300))
+            .WithContent(new('x', 300))
             .Build();
         UniformChunker chunker = new(chunkSize: 100);
 
@@ -140,7 +140,7 @@ public sealed class UniformChunkerTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default()
-            .WithContent(new string('x', 250))
+            .WithContent(new('x', 250))
             .Build();
         UniformChunker chunker = new(chunkSize: 100);
 
@@ -161,7 +161,7 @@ public sealed class UniformChunkerTests
     {
         // Arrange
         RlmDocument document = RlmDocumentBuilder.Default()
-            .WithContent(new string('x', 1000))
+            .WithContent(new('x', 1000))
             .Build();
         UniformChunker chunker = new(chunkSize: 10);
 

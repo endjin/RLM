@@ -25,17 +25,17 @@ public sealed class FilterCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new FilterCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoDocument_ReturnsErrorCode()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         FilterCommand.Settings settings = new() { Pattern = "test" };
@@ -59,7 +59,7 @@ public sealed class FilterCommandTests
             .WithMetadata(m => m.WithTotalLength(35).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         FilterCommand.Settings settings = new() { Pattern = "keyword", Context = 10 };
@@ -83,7 +83,7 @@ public sealed class FilterCommandTests
             .WithMetadata(m => m.WithTotalLength(24).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         FilterCommand.Settings settings = new() { Pattern = "xyz123" };
@@ -106,7 +106,7 @@ public sealed class FilterCommandTests
             .WithMetadata(m => m.WithTotalLength(20).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         FilterCommand.Settings settings = new() { Pattern = "keyword", Context = 100 };
@@ -131,8 +131,8 @@ public sealed class FilterCommandTests
             .Build();
 
         RlmSession? savedSession = null;
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
-        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(session));
+        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         FilterCommand.Settings settings = new() { Pattern = "test" };
         CommandContext context = CreateCommandContext();
@@ -155,7 +155,7 @@ public sealed class FilterCommandTests
             .WithMetadata(m => m.WithTotalLength(23).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         FilterCommand.Settings settings = new() { Pattern = @"[\w.-]+@[\w.-]+\.\w+" };
@@ -173,7 +173,7 @@ public sealed class FilterCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "filter", null);
+        return new([], remaining, "filter", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

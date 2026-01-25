@@ -28,7 +28,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.Title.ShouldBe("My Document Title");
@@ -54,7 +54,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.Title.ShouldBe("Frontmatter Title");
@@ -80,7 +80,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.Title.ShouldBe("Frontmatter Title");
@@ -101,7 +101,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Content.ShouldNotContain("---");
@@ -118,7 +118,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.WordCount.ShouldBe(10);
@@ -141,7 +141,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.HeaderCount.ShouldBe(4);
@@ -168,7 +168,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.CodeBlockCount.ShouldBe(2);
@@ -195,7 +195,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.CodeLanguages.ShouldNotBeNull();
@@ -214,7 +214,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.EstimatedReadingTimeMinutes.ShouldBe(2);
@@ -229,7 +229,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.EstimatedReadingTimeMinutes.ShouldBe(1);
@@ -250,7 +250,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata.ShouldNotBeNull();
@@ -270,7 +270,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata.ShouldNotBeNull();
@@ -291,7 +291,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata.ShouldNotBeNull();
@@ -313,7 +313,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata.ShouldNotBeNull();
@@ -334,7 +334,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata.ShouldNotBeNull();
@@ -354,7 +354,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata?.ContainsKey("detectedType").ShouldBeFalse();
@@ -369,7 +369,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.TotalLength.ShouldBe(result.Content.Length);
@@ -405,7 +405,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata!["title"].ShouldBe("Quoted Title");
@@ -429,7 +429,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.ExtendedMetadata!.ContainsKey("# This is a comment").ShouldBeFalse();
@@ -445,7 +445,7 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.CodeBlockCount.ShouldBeNull();
@@ -461,9 +461,11 @@ public sealed class MetadataExtractionProcessorTests
             .Build();
 
         // Act
-        RlmDocument result = await processor.ProcessAsync(document);
+        RlmDocument result = await processor.ProcessAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Metadata.Title.ShouldBe("Original Title");
     }
+
+    public TestContext TestContext { get; set; }
 }

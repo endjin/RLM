@@ -126,7 +126,8 @@ public sealed class FileDocumentReader(IFileSystem fileSystem) : IDocumentReader
 
     private static string? GetContentType(string path)
     {
-        string extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        FilePath filePath = new(path);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension switch
         {
             ".md" or ".markdown" => "text/markdown",

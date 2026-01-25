@@ -19,7 +19,7 @@ public sealed class InfoCommand(
     IAnsiConsole console,
     ISessionStore sessionStore) : AsyncCommand<InfoCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandOption("-j|--json")]
         [Description("Output in JSON format for machine parsing")]
@@ -32,7 +32,7 @@ public sealed class InfoCommand(
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         if (!session.HasDocument)
         {

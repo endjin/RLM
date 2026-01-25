@@ -49,7 +49,7 @@ public sealed class RlmDocumentBuilder
             .WithLineCount(content.Split('\n').Length)
             .Build();
 
-        return new RlmDocument()
+        return new()
         {
             Id = id,
             Content = content,

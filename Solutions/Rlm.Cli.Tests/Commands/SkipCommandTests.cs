@@ -24,9 +24,9 @@ public sealed class SkipCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new SkipCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
@@ -34,7 +34,7 @@ public sealed class SkipCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.Empty().Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 1 };
         CommandContext context = CreateCommandContext();
@@ -52,7 +52,7 @@ public sealed class SkipCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.Empty().Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 1, Json = true };
         CommandContext context = CreateCommandContext();
@@ -73,7 +73,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(10)
             .WithCurrentChunkIndex(2)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 3 };
         CommandContext context = CreateCommandContext();
@@ -86,7 +86,7 @@ public sealed class SkipCommandTests
         console.Output.ShouldContain("Skipped 3 chunk(s)");
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 5),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -96,7 +96,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(10)
             .WithCurrentChunkIndex(5)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = -2 };
         CommandContext context = CreateCommandContext();
@@ -109,7 +109,7 @@ public sealed class SkipCommandTests
         console.Output.ShouldContain("Skipped -2 chunk(s)");
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 3),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -119,7 +119,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(2)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 100 };
         CommandContext context = CreateCommandContext();
@@ -131,7 +131,7 @@ public sealed class SkipCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 4), // Clamped to last
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(2)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = -100 };
         CommandContext context = CreateCommandContext();
@@ -153,7 +153,7 @@ public sealed class SkipCommandTests
         result.ShouldBe(0);
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 0), // Clamped to first
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(1)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 2, Json = true };
         CommandContext context = CreateCommandContext();
@@ -195,7 +195,7 @@ public sealed class SkipCommandTests
             .WithChunks(chunks)
             .WithCurrentChunkIndex(0)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 1, SkipEmpty = true };
         CommandContext context = CreateCommandContext();
@@ -208,7 +208,7 @@ public sealed class SkipCommandTests
         // Should skip chunks 1 and 2 (< 100 chars) and land on chunk 3
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 3),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -228,7 +228,7 @@ public sealed class SkipCommandTests
             .WithChunks(chunks)
             .WithCurrentChunkIndex(4)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = -1, SkipEmpty = true };
         CommandContext context = CreateCommandContext();
@@ -242,7 +242,7 @@ public sealed class SkipCommandTests
         // Starting at 4, skip -1 = 3, then skip empty backward (2 is small, 1 is small) = land on 0
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 3 || s.CurrentChunkIndex == 0),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -252,7 +252,7 @@ public sealed class SkipCommandTests
         RlmSession session = RlmSessionBuilder.WithLoadedChunks(5)
             .WithCurrentChunkIndex(2)
             .Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(session);
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(session);
 
         SkipCommand.Settings settings = new() { Count = 0 };
         CommandContext context = CreateCommandContext();
@@ -265,13 +265,13 @@ public sealed class SkipCommandTests
         console.Output.ShouldContain("Skipped 0 chunk(s)");
         await sessionStore.Received(1).SaveAsync(
             Arg.Is<RlmSession>(s => s.CurrentChunkIndex == 2),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "skip", null);
+        return new([], remaining, "skip", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

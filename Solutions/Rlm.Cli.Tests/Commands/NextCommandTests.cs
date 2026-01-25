@@ -25,22 +25,22 @@ public sealed class NextCommandTests
     [TestInitialize]
     public void Setup()
     {
-        this.console = new TestConsole();
+        this.console = new();
         this.fileSystem = Substitute.For<IFileSystem>();
         this.sessionStore = Substitute.For<ISessionStore>();
-        this.command = new NextCommand(console, sessionStore);
+        this.command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoChunks_ReturnsErrorCode()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(new RlmSession()));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(1);
@@ -57,15 +57,15 @@ public sealed class NextCommandTests
             .Build();
 
         RlmSession? savedSession = null;
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
-        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<CancellationToken>())
+        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
@@ -81,13 +81,13 @@ public sealed class NextCommandTests
             .WithCurrentChunkIndex(2) // Last index
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        int result = await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        int result = await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
@@ -103,13 +103,13 @@ public sealed class NextCommandTests
             .WithCurrentChunkIndex(0)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Index");
@@ -126,13 +126,13 @@ public sealed class NextCommandTests
             .WithCurrentChunkIndex(0)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Remaining");
@@ -148,13 +148,13 @@ public sealed class NextCommandTests
             .WithResult("key2", "value2")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("Stored results: 2");
@@ -168,13 +168,13 @@ public sealed class NextCommandTests
             .WithCurrentChunkIndex(2)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         CommandContext context = CreateCommandContext();
 
         // Act
-        await command.ExecuteAsync(context, new NextCommand.Settings(), CancellationToken.None);
+        await command.ExecuteAsync(context, new(), CancellationToken.None);
 
         // Assert
         console.Output.ShouldContain("aggregate");
@@ -183,7 +183,7 @@ public sealed class NextCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "next", null);
+        return new([], remaining, "next", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

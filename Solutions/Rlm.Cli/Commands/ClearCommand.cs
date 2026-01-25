@@ -6,6 +6,7 @@ using Rlm.Cli.Core.Session;
 using Rlm.Cli.Infrastructure;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using System.ComponentModel;
 
 namespace Rlm.Cli.Commands;
 
@@ -14,22 +15,35 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class ClearCommand(IAnsiConsole console, ISessionStore sessionStore) : AsyncCommand<ClearCommand.Settings>
 {
-    public sealed class Settings : CommandSettings;
+    public sealed class Settings : RlmCommandSettings
+    {
+        [CommandOption("--all")]
+        [Description("Delete ALL RLM sessions found in the storage location.")]
+        public bool All { get; set; }
+    }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        if (settings.All)
+        {
+            sessionStore.DeleteAll();
+            console.MarkupLine("[green]All RLM sessions cleared.[/]");
+            return 0;
+        }
+
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
 
         bool hadDocument = session.HasDocument;
         bool hadChunks = session.HasChunks;
         bool hadResults = session.Results.Count > 0;
 
         session.Clear();
-        sessionStore.Delete();
+        sessionStore.Delete(settings.SessionId);
 
         if (hadDocument || hadChunks || hadResults)
         {
-            console.MarkupLine("[green]Session cleared.[/]");
+            string sessionMsg = settings.SessionId is null ? "Session" : $"Session '{settings.SessionId}'";
+            console.MarkupLine($"[green]{sessionMsg} cleared.[/]");
             if (hadDocument)
             {
                 console.MarkupLine("[dim]- Document unloaded[/]");
@@ -45,7 +59,8 @@ public sealed class ClearCommand(IAnsiConsole console, ISessionStore sessionStor
         }
         else
         {
-            console.MarkupLine("[yellow]Session was already empty.[/]");
+            string sessionMsg = settings.SessionId is null ? "Session" : $"Session '{settings.SessionId}'";
+            console.MarkupLine($"[yellow]{sessionMsg} was already empty.[/]");
         }
 
         return 0;

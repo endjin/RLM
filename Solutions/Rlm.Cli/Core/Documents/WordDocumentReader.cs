@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Spectre.IO;
 
 namespace Rlm.Cli.Core.Documents;
 
@@ -14,7 +15,7 @@ namespace Rlm.Cli.Core.Documents;
 /// Reads Word (.docx) documents using DocumentFormat.OpenXml.
 /// Extracts paragraph text and document metadata (title, author).
 /// </summary>
-public sealed partial class WordDocumentReader : IDocumentReader
+public sealed partial class WordDocumentReader(IFileSystem fileSystem) : IDocumentReader
 {
     public bool CanRead(Uri source)
     {
@@ -23,7 +24,8 @@ public sealed partial class WordDocumentReader : IDocumentReader
             return false;
         }
 
-        string extension = Path.GetExtension(source.LocalPath).ToLowerInvariant();
+        FilePath filePath = new(source.LocalPath);
+        string? extension = filePath.GetExtension()?.ToLowerInvariant();
         return extension == ".docx";
     }
 
@@ -35,7 +37,8 @@ public sealed partial class WordDocumentReader : IDocumentReader
         }
 
         string path = source.LocalPath;
-        if (!File.Exists(path))
+        FilePath filePath = new(path);
+        if (!fileSystem.File.Exists(filePath))
         {
             return Task.FromResult<RlmDocument?>(null);
         }
@@ -86,9 +89,10 @@ public sealed partial class WordDocumentReader : IDocumentReader
             string? title = doc.PackageProperties.Title;
             string? author = doc.PackageProperties.Creator;
 
+            FilePath filePath = new(path);
             return new RlmDocument
             {
-                Id = title ?? Path.GetFileName(path),
+                Id = title ?? filePath.GetFilename().ToString(),
                 Content = text,
                 Metadata = new DocumentMetadata
                 {

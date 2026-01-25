@@ -25,10 +25,10 @@ public sealed class StoreCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new StoreCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
@@ -38,9 +38,9 @@ public sealed class StoreCommandTests
         RlmSession session = new();
         RlmSession? savedSession = null;
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
-        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<CancellationToken>())
+        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         StoreCommand.Settings settings = new() { Key = "chunk_0", Value = "Result value" };
@@ -64,9 +64,9 @@ public sealed class StoreCommandTests
             .Build();
 
         RlmSession? savedSession = null;
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
-        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<CancellationToken>())
+        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         StoreCommand.Settings settings = new() { Key = "key", Value = "new value" };
@@ -84,7 +84,7 @@ public sealed class StoreCommandTests
     public async Task ExecuteAsync_DisplaysStoredConfirmation()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         StoreCommand.Settings settings = new() { Key = "my_key", Value = "my value" };
@@ -106,7 +106,7 @@ public sealed class StoreCommandTests
             .WithResult("existing", "value")
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         StoreCommand.Settings settings = new() { Key = "new_key", Value = "new value" };
@@ -127,7 +127,7 @@ public sealed class StoreCommandTests
             .WithCurrentChunkIndex(0)
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         StoreCommand.Settings settings = new() { Key = "key", Value = "value" };
@@ -148,7 +148,7 @@ public sealed class StoreCommandTests
             .WithCurrentChunkIndex(2) // Last chunk
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         StoreCommand.Settings settings = new() { Key = "key", Value = "value" };
@@ -165,7 +165,7 @@ public sealed class StoreCommandTests
     public async Task ExecuteAsync_NoChunks_NoSuggestion()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         StoreCommand.Settings settings = new() { Key = "key", Value = "value" };
@@ -182,7 +182,7 @@ public sealed class StoreCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "store", null);
+        return new([], remaining, "store", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

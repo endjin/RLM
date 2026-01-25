@@ -29,7 +29,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -45,7 +45,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -66,7 +66,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -93,7 +93,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue(); // Unbalanced blocks are warnings, not errors
@@ -122,7 +122,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert - Validation completes without error
         result.IsValid.ShouldBeTrue();
@@ -138,7 +138,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -154,7 +154,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -185,7 +185,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -209,7 +209,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.Warnings.ShouldContain(w => w.Contains("Unbalanced code blocks"));
@@ -231,7 +231,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert - Valid markdown should pass validation
         result.IsValid.ShouldBeTrue();
@@ -246,7 +246,7 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -267,9 +267,11 @@ public sealed class SyntacticValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await validator.ValidateAsync(document);
+        ValidationResult result = await validator.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
     }
+
+    public TestContext TestContext { get; set; }
 }

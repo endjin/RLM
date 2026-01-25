@@ -20,7 +20,7 @@ namespace Rlm.Cli.Commands;
 /// </summary>
 public sealed class LoadCommand(IAnsiConsole console, IFileSystem fileSystem, ISessionStore sessionStore) : AsyncCommand<LoadCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : RlmCommandSettings
     {
         [CommandArgument(0, "<source>")]
         [Description("File path, directory path, or '-' for stdin")]
@@ -77,9 +77,9 @@ public sealed class LoadCommand(IAnsiConsole console, IFileSystem fileSystem, IS
             return 1;
         }
 
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
         session.LoadDocument(document);
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         stopwatch.Stop();
         DisplayDocumentInfo(document, stopwatch.Elapsed);
@@ -131,9 +131,9 @@ public sealed class LoadCommand(IAnsiConsole console, IFileSystem fileSystem, IS
             console.MarkupLine($"[yellow]Warning:[/] Found {fileCount} files, loaded only the first. Use --merge to combine all.");
         }
 
-        RlmSession session = await sessionStore.LoadAsync(cancellationToken);
+        RlmSession session = await sessionStore.LoadAsync(settings.SessionId, cancellationToken);
         session.LoadDocument(mergedDocument);
-        await sessionStore.SaveAsync(session, cancellationToken);
+        await sessionStore.SaveAsync(session, settings.SessionId, cancellationToken);
 
         stopwatch.Stop();
         DisplayDocumentInfo(mergedDocument, stopwatch.Elapsed, fileCount);
@@ -257,11 +257,11 @@ public sealed class LoadCommand(IAnsiConsole console, IFileSystem fileSystem, IS
         // Order matters: more specific readers first, generic FileDocumentReader last
         return new CompositeDocumentReader(
             new StdinDocumentReader(),
-            new MarkdownDocumentReader(),
-            new PdfDocumentReader(),
-            new HtmlDocumentReader(),
-            new JsonDocumentReader(),
-            new WordDocumentReader(),
+            new MarkdownDocumentReader(fileSystem),
+            new PdfDocumentReader(fileSystem),
+            new HtmlDocumentReader(fileSystem),
+            new JsonDocumentReader(fileSystem),
+            new WordDocumentReader(fileSystem),
             new FileDocumentReader(fileSystem)  // Fallback for plain text
         );
     }

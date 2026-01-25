@@ -25,17 +25,17 @@ public sealed class ChunkCommandTests
     [TestInitialize]
     public void Setup()
     {
-        console = new TestConsole();
+        console = new();
         fileSystem = Substitute.For<IFileSystem>();
         sessionStore = Substitute.For<ISessionStore>();
-        command = new ChunkCommand(console, sessionStore);
+        command = new(console, sessionStore);
     }
 
     [TestMethod]
     public async Task ExecuteAsync_NoDocument_ReturnsErrorCode()
     {
         // Arrange
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RlmSession()));
 
         ChunkCommand.Settings settings = new() { Strategy = "uniform" };
@@ -55,7 +55,7 @@ public sealed class ChunkCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.WithLoadedDocument().Build();
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new() { Strategy = "filter", Pattern = null };
@@ -75,11 +75,11 @@ public sealed class ChunkCommandTests
     {
         // Arrange
         RlmSession session = RlmSessionBuilder.Default()
-            .WithContent(new string('x', 150))
+            .WithContent(new('x', 150))
             .WithMetadata(m => m.WithTotalLength(150).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new() { Strategy = "uniform", Size = 100 };
@@ -92,7 +92,7 @@ public sealed class ChunkCommandTests
         result.ShouldBe(0);
         console.Output.ShouldContain("Created");
         console.Output.ShouldContain("chunk");
-        await sessionStore.Received(1).SaveAsync(Arg.Any<RlmSession>(), Arg.Any<CancellationToken>());
+        await sessionStore.Received(1).SaveAsync(Arg.Any<RlmSession>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -104,7 +104,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(31).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new()
@@ -132,7 +132,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(50).WithLineCount(7))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new() { Strategy = "semantic" };
@@ -155,7 +155,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(14).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new()
@@ -183,9 +183,9 @@ public sealed class ChunkCommandTests
             .Build();
 
         RlmSession? savedSession = null;
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
-        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<CancellationToken>())
+        sessionStore.SaveAsync(Arg.Do<RlmSession>(s => savedSession = s), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         ChunkCommand.Settings settings = new() { Strategy = "uniform", Size = 100 };
@@ -209,7 +209,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(60).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new() { Strategy = "token", MaxTokens = 512 };
@@ -233,7 +233,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(55).WithLineCount(5))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new() { Strategy = "recursive", Size = 100 };
@@ -257,7 +257,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(30).WithLineCount(1))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new()
@@ -286,7 +286,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(45).WithLineCount(5))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new()
@@ -314,7 +314,7 @@ public sealed class ChunkCommandTests
             .WithMetadata(m => m.WithTotalLength(45).WithLineCount(2))
             .Build();
 
-        sessionStore.LoadAsync(Arg.Any<CancellationToken>())
+        sessionStore.LoadAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(session));
 
         ChunkCommand.Settings settings = new()
@@ -336,7 +336,7 @@ public sealed class ChunkCommandTests
     private static CommandContext CreateCommandContext()
     {
         MockIRemainingArguments remaining = new();
-        return new CommandContext([], remaining, "chunk", null);
+        return new([], remaining, "chunk", null);
     }
 
     private sealed class MockIRemainingArguments : IRemainingArguments

@@ -29,7 +29,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -53,7 +53,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -79,7 +79,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -107,7 +107,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -132,7 +132,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -149,7 +149,7 @@ public sealed class CompositeValidatorTests
         RlmDocument document = RlmDocumentBuilder.Default().Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeTrue();
@@ -182,7 +182,7 @@ public sealed class CompositeValidatorTests
             .Build();
 
         // Should not throw and should run successfully
-        ValidationResult result = composite.ValidateAsync(document).GetAwaiter().GetResult();
+        ValidationResult result = composite.ValidateAsync(document, TestContext.CancellationToken).GetAwaiter().GetResult();
         result.IsValid.ShouldBeTrue();
     }
 
@@ -196,7 +196,7 @@ public sealed class CompositeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -213,10 +213,12 @@ public sealed class CompositeValidatorTests
             .Build();
 
         // Act
-        ValidationResult result = await composite.ValidateAsync(document);
+        ValidationResult result = await composite.ValidateAsync(document, TestContext.CancellationToken);
 
         // Assert
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.Contains("too small"));
     }
+
+    public TestContext TestContext { get; set; }
 }
