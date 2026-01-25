@@ -1,10 +1,10 @@
 ---
 name: rlm
-description: Process queries against massive text inputs using RLM decomposition. Use when analyzing documents exceeding context limits, finding information in large corpora (needle-in-haystack), summarizing massive documents, or aggregating data across large datasets.
+description: Process and analyze massive documents (PDF, Word, HTML, JSON, Markdown) that exceed context limits. Use when a document is too large to fit in context, when you need to search large files, find specific text in big documents, summarize lengthy content, extract data from large corpora, aggregate information across documents, compare sections, or chunk documents for processing. Triggers on phrases like "too big", "exceeds context", "large document", "chunk this file", "needle in haystack".
 allowed-tools: Bash(rlm:*)
 metadata:
   author: dotnet-knowledge-base
-  version: 1.1.0
+  version: 2.0.0
 license: Apache-2.0
 ---
 
@@ -14,219 +14,166 @@ license: Apache-2.0
 
 RLM CLI implements the Data Ingestion Building Blocks pattern for processing documents that exceed your context window. It streams content using IAsyncEnumerable and maintains session state for multi-turn processing.
 
-Use this skill when:
+**Use this skill when:**
 - Input exceeds your context window
 - You need to find specific information in large documents (needle-in-haystack)
 - You need to summarize or aggregate data from massive corpora
 - You need to compare sections across large documents
 
+## Quick Start
+
+```bash
+# Minimal workflow: load -> chunk -> process -> aggregate
+rlm load document.md
+rlm chunk --strategy uniform --size 50000
+# Process current chunk, then:
+rlm store result_0 "extracted info"
+rlm next                              # Get next chunk
+rlm store result_1 "more info"
+rlm aggregate                         # Combine all results
+```
+
 ## Documentation
 
-| Topic               | File                                     | Description                          |
-|---------------------|------------------------------------------|--------------------------------------|
-| Strategy Deep-Dive  | [strategies.md](strategies.md)           | All chunking strategies with options |
-| Examples            | [examples.md](examples.md)               | Real-world workflow scenarios        |
-| Technical Reference | [reference.md](reference.md)             | JSON output formats and session file |
-| Troubleshooting     | [troubleshooting.md](troubleshooting.md) | Tips, errors, and edge cases         |
+| Topic               | File                                     | Description                                 |
+|---------------------|------------------------------------------|---------------------------------------------|
+| **Agent Guide**     | [agent-guide.md](agent-guide.md)         | Parallel processing with sub-agents         |
+| **Strategies**      | [strategies.md](strategies.md)           | All chunking strategies with decision tree  |
+| **Examples**        | [examples.md](examples.md)               | Real-world workflow scenarios               |
+| **Reference**       | [reference.md](reference.md)             | Complete command reference and JSON formats |
+| **Troubleshooting** | [troubleshooting.md](troubleshooting.md) | Common errors and solutions                 |
 
 ## Supported Formats
 
-| Format     | Extension(s)       | Features                                        |
-|------------|--------------------|-------------------------------------------------|
-| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers          |
-| PDF        | `.pdf`             | Text extraction, page count, title, author      |
-| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure       |
-| JSON       | `.json`            | Pretty-prints, element count                    |
-| Word       | `.docx`            | Paragraph extraction, document properties       |
-| Plain text | `.txt`, etc.       | Basic text loading                              |
+| Format     | Extension(s)       | Features                                   |
+|------------|--------------------|--------------------------------------------|
+| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers     |
+| PDF        | `.pdf`             | Text extraction, page count, title, author |
+| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure  |
+| JSON       | `.json`            | Pretty-prints, element count               |
+| Word       | `.docx`            | Paragraph extraction, document properties  |
+| Plain text | `.txt`, etc.       | Basic text loading                         |
 
-## Workflow
+## Core Workflow
 
 ### 1. Load Document
+
 ```bash
-# Load single file
-rlm load document.md
-# Output: Loaded 10,485,760 chars, ~2,621,440 tokens (150ms)
-
-# Load directory (merges all documents by default)
-rlm load ./docs/
-
-# Recursively load all markdown files from a directory with glob pattern
-rlm load ./docs/ --pattern "**/*.md"
-
-# Load without merging (keeps documents separate)
-rlm load ./docs/ --merge false
-
-# Load specific formats
-rlm load report.pdf      # PDF with text extraction
-rlm load page.html       # HTML converted to Markdown
-rlm load data.json       # JSON pretty-printed
-rlm load report.docx     # Word document
-
-# Load from stdin
-cat huge-file.txt | rlm load -
+rlm load document.md                    # Single file
+rlm load ./docs/                        # Directory (merged)
+rlm load ./docs/ --pattern "**/*.md"    # Recursive glob
+rlm load ./docs/ --merge false          # Keep separate
+cat huge-file.txt | rlm load -          # From stdin
 ```
 
 ### 2. Check Document Info
+
 ```bash
-rlm info
-# Shows: source, length, token estimate, lines, chunks, results
-# Enhanced metadata (when available):
-#   Content-Type: text/markdown
-#   Title: Document Title
-#   Author: Author Name
-#   Pages: 42 (PDF)
-#   Words: 15,234
-#   Headers: 28
-#   Code Blocks: 12 (C#, TypeScript, Bash)
-#   Reading Time: ~61 minutes
+rlm info                # Size, tokens, metadata
+rlm info --progress     # Processing progress bar
 ```
 
-### 3. View Document Slices
-```bash
-rlm slice 0:1000      # First 1000 chars
-rlm slice -500:       # Last 500 chars
-rlm slice 1000:2000   # Middle section
-```
+### 3. Choose Decomposition Strategy
 
-### 4. Choose Decomposition Strategy
-
-**Filtering (needle-in-haystack):**
-```bash
-rlm filter "alice|email|@"
-# Returns matching sections with surrounding context
-```
-
-**Uniform (aggregation/summary):**
-```bash
-rlm chunk --strategy uniform --size 50000
-# Returns first chunk, stores all in buffer
-```
-
-**Semantic (document structure):**
-```bash
-rlm chunk --strategy semantic
-# Splits on Markdown headers, preserves hierarchy
-```
-
-**Token-Based (accurate token counting):**
-```bash
-rlm chunk --strategy token --max-tokens 512
-# Accurate token counting using GPT-4 tokenizer
-```
-
-**Recursive (intelligent splitting):**
-```bash
-rlm chunk --strategy recursive --size 50000
-# Splits using 7-level separator hierarchy
-```
-
-**Auto (query-based selection):**
-```bash
-rlm chunk --strategy auto --query "find the API key"
-# Automatically selects best strategy based on query
-```
+| Task               | Strategy    | Command                                             |
+|--------------------|-------------|-----------------------------------------------------|
+| Find specific info | `filter`    | `rlm filter "pattern"`                              |
+| Summarize document | `uniform`   | `rlm chunk --strategy uniform --size 50000`         |
+| Analyze structure  | `semantic`  | `rlm chunk --strategy semantic`                     |
+| Token-precise      | `token`     | `rlm chunk --strategy token --max-tokens 512`       |
+| Complex documents  | `recursive` | `rlm chunk --strategy recursive --size 50000`       |
+| Unknown task       | `auto`      | `rlm chunk --strategy auto --query "your question"` |
 
 See [strategies.md](strategies.md) for detailed options and selection guide.
 
-### 5. Process Chunks Iteratively
+### 4. Process Chunks
 
 ```bash
-# Process first chunk (shown after chunking)
-rlm store chunk_0 "Found: alice@example.com in line 42"
-
-# Get next chunk
-rlm next
-rlm store chunk_1 "Found: bob@example.com in line 1523"
-
+rlm store chunk_0 "Finding from first chunk"
+rlm next                                    # Get next chunk
+rlm store chunk_1 "Finding from second chunk"
 # Continue until "No more chunks"
 ```
 
-### 5a. Navigate Chunks Efficiently
+### 5. Navigate Efficiently
 
 ```bash
-rlm skip 10           # Skip forward 10 chunks
-rlm skip -5           # Skip backward 5 chunks
-rlm jump 50           # Jump to chunk 50 (1-based)
-rlm jump 50%          # Jump to 50% position
-```
-
-### 5b. Check Processing Progress
-
-```bash
-rlm info --progress
-# Output:
-# Progress: ███████████████░░░░░░░░░░░░░░░ 50.8%
-# Chunks: 32 / 63 (31 remaining)
-# Results: 5 stored
+rlm skip 10       # Skip forward 10 chunks
+rlm skip -5       # Skip backward 5 chunks
+rlm jump 50       # Jump to chunk 50 (1-based)
+rlm jump 50%      # Jump to 50% position
 ```
 
 ### 6. Aggregate Results
-```bash
-rlm aggregate
-# Output: Combined results for final synthesis
 
-# With custom separator
-rlm aggregate --separator "\n---\n"
+```bash
+rlm aggregate                       # Combine all stored results
+rlm aggregate --separator "\n---\n" # Custom separator
 ```
 
 ### 7. Clear Session
+
 ```bash
-rlm clear
-# Resets document, chunks, and results
+rlm clear         # Clear default session
+rlm clear --all   # Clear all sessions
 ```
 
-## Commands Reference
+## Parallel Processing
 
-| Command                 | Description                | Example                        |
-|-------------------------|----------------------------|--------------------------------|
-| `rlm load <file>`       | Load document into session | `rlm load corpus.txt`          |
-| `rlm load <dir>`        | Load directory of docs     | `rlm load ./docs/`             |
-| `rlm load - `           | Load from stdin            | `cat file.txt \| rlm load -`   |
-| `rlm info`              | Show document metadata     | `rlm info`                     |
-| `rlm info --progress`   | Show processing progress   | `rlm info --progress`          |
-| `rlm slice <range>`     | View section               | `rlm slice 0:1000`             |
-| `rlm chunk [opts]`      | Apply chunking strategy    | `rlm chunk --strategy uniform` |
-| `rlm filter <pattern>`  | Filter by regex            | `rlm filter "email\|@"`        |
-| `rlm next`              | Get next chunk             | `rlm next`                     |
-| `rlm skip <count>`      | Skip forward/backward      | `rlm skip 10`, `rlm skip -5`   |
-| `rlm jump <index>`      | Jump to chunk index or %   | `rlm jump 50`, `rlm jump 50%`  |
-| `rlm store <key> <val>` | Store partial result       | `rlm store chunk_0 "result"`   |
-| `rlm results`           | List stored results        | `rlm results`                  |
-| `rlm aggregate`         | Combine all results        | `rlm aggregate`                |
-| `rlm clear`             | Reset session              | `rlm clear`                    |
+For documents with 10+ chunks, use parallel processing with sub-agents:
 
-### Load Options
+```bash
+# 1. Parent initializes with named session
+rlm load massive.pdf --session parent
+rlm chunk --strategy uniform --size 30000 --session parent
 
-| Option      | Description                          | Example                         |
-|-------------|--------------------------------------|---------------------------------|
-| `--pattern` | Glob pattern for directory loading   | `--pattern "**/*"`              |
-| `--merge`   | Merge multiple documents (default: true) | `--merge false`             |
+# 2. Parent extracts chunks and spawns workers
+rlm next --raw --session parent > chunk_0.txt
+# SPAWN: rlm-worker with "Process chunk_0.txt, session=child_0"
 
-### JSON Output Options
+# 3. After workers complete, import and aggregate
+rlm import "rlm-session-child_*.json" --session parent
+rlm aggregate --session parent
+```
 
-| Command                 | Description                  |
-|-------------------------|------------------------------|
-| `rlm info --json`       | JSON output for session info |
-| `rlm next --json`       | JSON output for chunk        |
-| `rlm aggregate --json`  | JSON output for aggregate    |
-| `rlm aggregate --final` | Add completion signal        |
+**Key Rules:**
+- Parent uses `--session parent`
+- Each worker uses unique `--session child_N`
+- Workers store results with key `result`
 
-## Quick Reference
+See [agent-guide.md](agent-guide.md) for the complete parallel processing protocol.
 
-### Strategy Selection
+## Commands Quick Reference
 
-| Task                   | Strategy    |
-|------------------------|-------------|
-| Find specific info     | `filter`    |
-| Summarize document     | `uniform`   |
-| Analyze structure      | `semantic`  |
-| Token-precise chunking | `token`     |
-| Complex documents      | `recursive` |
-| Unknown task           | `auto`      |
+| Command                    | Description                            |
+|----------------------------|----------------------------------------|
+| `rlm load <file\|dir\|->`  | Load document(s) into session          |
+| `rlm info [--progress]`    | Show document metadata or progress     |
+| `rlm slice <range>`        | View section (e.g., `0:1000`, `-500:`) |
+| `rlm chunk [--strategy]`   | Apply chunking strategy                |
+| `rlm filter <pattern>`     | Filter by regex                        |
+| `rlm next [--raw\|--json]` | Get next chunk                         |
+| `rlm skip <count>`         | Skip forward/backward                  |
+| `rlm jump <index\|%>`      | Jump to chunk index or percentage      |
+| `rlm store <key> <value>`  | Store partial result                   |
+| `rlm import <glob>`        | Import child session results           |
+| `rlm results`              | List stored results                    |
+| `rlm aggregate`            | Combine all results                    |
+| `rlm clear [--all]`        | Reset session(s)                       |
 
-### Session Persistence
+For complete command options and JSON output formats, see [reference.md](reference.md).
 
-The session is stored at `~/.rlm-session.json`. Clear with `rlm clear` when starting a new task.
+## Best Practices
 
-See [troubleshooting.md](troubleshooting.md) for tips and common errors.
+1. **Start with `info`** - Check document size before choosing strategy
+2. **Filter first** - For search tasks, use filter to reduce content
+3. **Store incrementally** - Save results after each chunk, not in batches
+4. **Navigate efficiently** - Use `skip` and `jump` instead of repeated `next`
+5. **Merge small chunks** - Use `--min-size --merge-small` for semantic chunking
+6. **Clear between tasks** - Run `rlm clear` when starting fresh
+
+## Permissions
+
+This skill restricts tool access to `Bash(rlm:*)` only - Claude can only execute `rlm` commands when this skill is active.
+
+For common errors and solutions, see [troubleshooting.md](troubleshooting.md).

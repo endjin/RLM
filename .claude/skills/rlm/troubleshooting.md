@@ -1,294 +1,223 @@
 # RLM Troubleshooting Guide
 
-This document covers tips, common errors, and solutions for working with the RLM CLI.
+Quick reference for common issues and solutions when using the RLM CLI.
 
-## Best Practices
+## Quick Reference Table
 
-### Before Processing
+| Issue                  | Cause                     | Solution                                     |
+|------------------------|---------------------------|----------------------------------------------|
+| "Session locked"       | Concurrent access         | Use unique `--session` IDs                   |
+| "No chunks available"  | Missing `load` or `chunk` | Run `rlm load` then `rlm chunk`              |
+| "No more chunks"       | Reached end of buffer     | Use `rlm aggregate` to combine results       |
+| Output has formatting  | Default output mode       | Use `--raw` for clean text                   |
+| Too many small chunks  | Granular semantic split   | Add `--min-size 5000 --merge-small`          |
+| Session file not found | Wrong session ID          | Check `ls rlm-session-*.json`                |
+| Pattern not matching   | Regex escaping            | Escape special chars: `\\[`, `\\]`           |
+| Import finds no files  | Glob pattern wrong        | Test glob with `ls rlm-session-child_*.json` |
 
-1. **Start with `info`**: Check document size and token estimate before choosing a strategy
-   ```bash
-   rlm load document.txt
-   rlm info
-   # Review: totalLength, tokenEstimate, lineCount
-   ```
-
-2. **Use `slice` to explore**: View different parts of the document to understand structure
-   ```bash
-   rlm slice 0:2000      # First 2000 chars
-   rlm slice -1000:      # Last 1000 chars
-   ```
-
-3. **Filter first**: For search tasks, filter to reduce content before processing
-   ```bash
-   rlm filter "search_term"  # Much smaller than full document
-   ```
-
-### During Processing
-
-4. **Store incrementally**: Don't batch - store results after each chunk
-   ```bash
-   rlm store chunk_0 "finding"
-   rlm next
-   rlm store chunk_1 "another finding"  # Store immediately
-   ```
-
-5. **Navigate efficiently**: Use `skip` and `jump` instead of repeated `next` calls
-   ```bash
-   rlm skip 10       # Skip 10 chunks forward
-   rlm jump 50%      # Jump to midpoint
-   rlm skip -5       # Go back 5 chunks
-   ```
-
-6. **Check progress**: Monitor processing state during long sessions
-   ```bash
-   rlm info --progress
-   # Shows: progress bar, chunks remaining, estimated tokens
-   ```
-
-### Managing Chunks
-
-7. **Merge small chunks**: If semantic creates too many chunks, use merging
-   ```bash
-   rlm chunk --strategy semantic --min-size 5000 --merge-small
-   # Reduces 500+ chunks to ~60 chunks
-   ```
-
-8. **Use hybrid mode**: Combine semantic structure with filter patterns
-   ```bash
-   rlm chunk --strategy semantic --pattern "keyword"
-   ```
-
-### Session Management
-
-9. **Clear between tasks**: Always reset when starting fresh
-   ```bash
-   rlm clear
-   ```
-
-10. **Use JSON for automation**: Machine-parsable output for scripts
-    ```bash
-    rlm next --json
-    rlm aggregate --json --final
-    ```
+---
 
 ## Common Errors
 
-| Error                      | Cause                     | Solution                                |
-|----------------------------|---------------------------|-----------------------------------------|
-| "No document loaded"       | `load` not called         | Run `rlm load <file>` first             |
-| "No chunks available"      | `chunk` not called        | Run `rlm chunk` after loading           |
-| "No more chunks"           | All chunks processed      | Use `rlm aggregate` to get results      |
-| "Cannot read source"       | File not found            | Check file path exists                  |
-| "Filter requires pattern"  | Missing `--pattern`       | Add pattern argument to filter          |
-| "Invalid slice range"      | Malformed range syntax    | Use format `start:end` (e.g., `0:1000`) |
-| "Recursion depth exceeded" | Too many nested RLM calls | Run `rlm clear` to reset depth          |
+### Session Locked
 
-## Validation Errors
+**Symptom:** Error message about session being locked or in use.
 
-The CLI validates documents before processing. Common validation errors:
+**Cause:** Multiple commands accessing the same session simultaneously.
 
-| Error                          | Cause                           | Solution                        |
-|--------------------------------|---------------------------------|---------------------------------|
-| "Binary content detected"      | File contains binary data       | Use text-based files only       |
-| "File exceeds size limit"      | File larger than 5MB            | Split file or use smaller input |
-| "Invalid UTF-8 encoding"       | File has encoding issues        | Convert to UTF-8 encoding       |
-| "Unbalanced code blocks"       | Markdown code fences don't match| Fix markdown ``` syntax         |
-| "Unsupported file format"      | Unknown file extension          | Use supported format or .txt    |
-
-## Format-Specific Issues
-
-### PDF Issues
-
-| Problem                        | Cause                           | Solution                        |
-|--------------------------------|---------------------------------|---------------------------------|
-| Empty or minimal text          | Scanned PDF without OCR         | Use OCR tool first              |
-| Garbled characters             | Non-standard font encoding      | Try different PDF or re-export  |
-| Missing pages                  | Encrypted or protected PDF      | Remove protection first         |
-| Slow loading                   | Very large PDF (100+ pages)     | Split PDF into smaller parts    |
-
+**Solution:**
 ```bash
-# Check if PDF has extractable text
-rlm load document.pdf
-rlm info
-# If TotalLength is very small, the PDF may be scanned images
+# Always use unique session IDs for parallel processing
+rlm load doc.pdf --session parent
+rlm next --raw --session parent > chunk.txt
+
+# Each worker uses unique ID
+rlm load chunk.txt --session child_0
+rlm load chunk.txt --session child_1
 ```
 
-### Word Document Issues
+---
 
-| Problem                        | Cause                           | Solution                        |
-|--------------------------------|---------------------------------|---------------------------------|
-| "Cannot open document"         | Corrupted .docx file            | Re-save from Word               |
-| Missing content                | Complex formatting/tables       | Tables may not extract fully    |
-| Wrong encoding                 | Non-UTF8 characters             | Re-save with UTF-8 encoding     |
-| Old .doc format                | Pre-2007 Word format            | Convert to .docx first          |
+### No Chunks Available
 
+**Symptom:** `rlm next` returns "No chunks available".
+
+**Cause:** Document loaded but not chunked.
+
+**Solution:**
 ```bash
-# Note: Only .docx is supported, not .doc
-# Convert older files using Word or LibreOffice
+# Must run chunk after load
+rlm load document.md
+rlm chunk --strategy uniform --size 50000
+rlm next  # Now works
 ```
 
-### HTML Issues
+---
 
-| Problem                        | Cause                           | Solution                        |
-|--------------------------------|---------------------------------|---------------------------------|
-| Missing content                | JavaScript-rendered content     | Use browser "Save as HTML"      |
-| Broken structure               | Malformed HTML                  | Clean HTML before loading       |
-| Excessive whitespace           | CSS-only formatting             | Content converts to Markdown    |
+### No More Chunks
 
-### JSON Issues
+**Symptom:** `rlm next` returns "No more chunks".
 
-| Problem                        | Cause                           | Solution                        |
-|--------------------------------|---------------------------------|---------------------------------|
-| "Invalid JSON"                 | Malformed JSON syntax           | Validate JSON first             |
-| Very slow loading              | Deeply nested structure         | Flatten or split the JSON       |
-| Truncated output               | Very large arrays               | Filter before loading           |
+**Cause:** Reached the end of the chunk buffer.
 
-## File Size Limits
-
-The default maximum file size is **5MB**. For larger files:
-
+**Solution:**
 ```bash
-# Option 1: Split the file
-split -b 4M large-file.txt part-
+# Check progress
+rlm info --progress
 
-# Option 2: Filter content first
-grep "relevant" large-file.txt > filtered.txt
-rlm load filtered.txt
+# If done processing, aggregate results
+rlm aggregate
 
-# Option 3: Use stdin with head/tail
-head -n 100000 large-file.txt | rlm load -
+# Or navigate back
+rlm jump 1  # Go back to first chunk
 ```
 
-### Recommended Approaches by Size
+---
 
-| File Size | Approach                                  |
-|-----------|-------------------------------------------|
-| < 1MB     | Load directly                             |
-| 1-5MB     | Load directly, use filter strategy        |
-| 5-20MB    | Pre-filter or split before loading        |
-| > 20MB    | Use external tools to extract relevant sections |
+### Too Many Small Chunks
 
-## Session Persistence
+**Symptom:** Semantic chunking creates hundreds of tiny chunks.
 
-The RLM session is persisted to `~/.rlm-session.json` between commands. This enables multi-turn processing:
+**Cause:** Document has many small headers/sections.
 
-1. Run a command
-2. Analyze the output
-3. Run the next command
-4. Repeat until complete
-
-### Session Contents
-
-The session file stores:
-- `Content`: The loaded document text
-- `Metadata`: Document metadata (source, length, token estimate)
-- `ChunkBuffer`: List of chunks from last chunking operation
-- `CurrentChunkIndex`: Current position in chunk buffer
-- `Results`: Dictionary of stored partial results
-- `RecursionDepth`: Current depth in nested RLM calls
-
-### Managing the Session File
-
+**Solution:**
 ```bash
-# View session file (if needed for debugging)
-cat ~/.rlm-session.json | jq .
+# Use merging to consolidate small chunks
+rlm chunk --strategy semantic --min-size 5000 --merge-small
 
-# Session file location
-ls -la ~/.rlm-session.json
-
-# Clear session and start fresh
-rlm clear
+# Or use recursive strategy instead
+rlm chunk --strategy recursive --size 50000
 ```
 
-### Session Recovery
+---
 
-If your session becomes corrupted:
+### Pattern Not Matching
 
+**Symptom:** Filter returns no results but you know matches exist.
+
+**Cause:** Regex special characters need escaping.
+
+**Solution:**
 ```bash
-# Remove session file manually
-rm ~/.rlm-session.json
+# Wrong - brackets are regex operators
+rlm filter "[ERROR]"
 
-# Or use clear command
-rlm clear
-```
-
-## Recursion Depth Limits
-
-To prevent infinite decomposition loops:
-
-- Maximum recursion depth: 5 levels
-- Session tracks `RecursionDepth` property
-- `rlm clear` resets depth to 0
-- Exceeding depth returns error instead of processing
-
-If you see "Recursion depth exceeded":
-```bash
-rlm clear  # Reset to 0
-rlm load document.txt  # Start fresh
-```
-
-## Performance Considerations
-
-### Large Documents
-
-For documents over 1MB:
-- Use `--min-size` with semantic chunking to reduce chunk count
-- Consider `filter` strategy if you're searching for specific content
-- Use `skip` and `jump` to navigate rather than sequential `next`
-
-### Memory Usage
-
-The CLI loads the entire document into memory. For very large files:
-- Consider pre-filtering with external tools
-- Split into smaller files before processing
-- Use stdin piping with streaming tools
-
-### Token Estimation
-
-The default token estimate (`characters / 4`) is approximate. For accurate counting:
-```bash
-rlm chunk --strategy token --max-tokens 4096
-# Uses Microsoft.ML.Tokenizers with GPT-4 tokenizer (cl100k_base)
-```
-
-## Regex Pattern Tips
-
-The `filter` strategy and hybrid mode use .NET regex syntax:
-
-### Common Patterns
-
-| Pattern        | Matches                             |
-|----------------|-------------------------------------|
-| `word`         | Literal "word"                      |
-| `word1\|word2` | Either word                         |
-| `\bword\b`     | Whole word only                     |
-| `\[ERROR\]`    | Literal "[ERROR]" (escape brackets) |
-| `.*`           | Any characters                      |
-| `\d+`          | One or more digits                  |
-
-### Escaping Special Characters
-
-Escape these characters with backslash: `[ ] ( ) { } . * + ? ^ $ \ |`
-
-```bash
-# Find [ERROR] literally
+# Correct - escape special characters
 rlm filter "\\[ERROR\\]"
 
-# Find email addresses
-rlm filter "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+# Or use simpler pattern
+rlm filter "ERROR"
 ```
 
-## JSON Output Issues
+---
 
-If JSON output is malformed:
-- Ensure document content doesn't contain unescaped JSON characters
-- Use `--json` consistently throughout the session
-- The `--final` flag adds `"signal": "FINAL"` to aggregate output
+### Import Finds No Files
+
+**Symptom:** `rlm import` returns "No session files found".
+
+**Cause:** Glob pattern doesn't match file names.
+
+**Solution:**
+```bash
+# Verify files exist
+ls rlm-session-*.json
+
+# Match the exact naming pattern used by workers
+rlm import "rlm-session-child_*.json" --session parent
+
+# Check worker session naming
+# Workers should use: --session child_0, --session child_1, etc.
+```
+
+---
+
+## Best Practices
+
+### Session Management
+
+1. **Always use named sessions for parallel work**
+   ```bash
+   rlm load doc.pdf --session main  # Not default session
+   ```
+
+2. **Use consistent naming conventions**
+   - Parent: `parent`, `main`, `controller`
+   - Workers: `child_0`, `child_1`, or `worker_0`, `worker_1`
+
+3. **Clean up after processing**
+   ```bash
+   rlm clear --all
+   ```
+
+### Performance Tips
+
+1. **Filter before chunking** when searching
+   ```bash
+   rlm load logs.txt
+   rlm filter "ERROR"  # Reduces content first
+   ```
+
+2. **Use appropriate chunk sizes**
+   - Too small: Many chunks, slow iteration
+   - Too large: May exceed context limits
+   - Recommended: 30,000-50,000 characters
+
+3. **Navigate efficiently**
+   ```bash
+   rlm skip 10      # Better than 10x rlm next
+   rlm jump 50%     # Jump to middle directly
+   ```
+
+### Result Storage
+
+1. **Store incrementally** after each chunk
+   ```bash
+   rlm store chunk_0 "finding..."
+   rlm next
+   rlm store chunk_1 "more findings..."
+   ```
+
+2. **Use descriptive keys**
+   ```bash
+   rlm store summary_q1 "Q1 revenue analysis"
+   rlm store summary_q2 "Q2 revenue analysis"
+   ```
+
+3. **Check stored results before aggregating**
+   ```bash
+   rlm results  # List all stored keys
+   rlm aggregate
+   ```
+
+---
+
+## Debugging Commands
+
+```bash
+# Check session state
+rlm info
+
+# View processing progress
+rlm info --progress
+
+# List stored results
+rlm results
+
+# View session file directly
+cat rlm-session-{id}.json | jq .
+
+# List all session files
+ls -la rlm-session-*.json
+```
+
+---
 
 ## Related Documentation
 
-- [SKILL.md](SKILL.md) - Overview and workflow
-- [strategies.md](strategies.md) - All chunking strategies with options
-- [examples.md](examples.md) - Real-world workflow scenarios
-- [reference.md](reference.md) - JSON output formats and session file
+| Topic       | File                             | Description                   |
+|-------------|----------------------------------|-------------------------------|
+| Overview    | [SKILL.md](SKILL.md)             | Quick start and workflow      |
+| Strategies  | [strategies.md](strategies.md)   | Chunking strategy selection   |
+| Examples    | [examples.md](examples.md)       | Real-world workflow scenarios |
+| Reference   | [reference.md](reference.md)     | Complete command reference    |
+| Agent Guide | [agent-guide.md](agent-guide.md) | Parallel processing protocol  |
