@@ -1,6 +1,6 @@
 ---
 name: rlm
-description: Process and analyze massive documents (PDF, Word, HTML, JSON, Markdown) that exceed context limits. Use when a document is too large to fit in context, when you need to search large files, find specific text in big documents, summarize lengthy content, extract data from large corpora, aggregate information across documents, compare sections, or chunk documents for processing. Triggers on phrases like "too big", "exceeds context", "large document", "chunk this file", "needle in haystack".
+description: Process and analyze massive documents (PDF, Word, HTML, JSON, Markdown) that exceed context limits. Use when a document is too large to fit in context, when you need to search large files, find specific text in big documents, summarize lengthy content, extract data from large corpora, aggregate information across documents, compare sections, or chunk documents for processing. Triggers on phrases like "too big", "exceeds context", "large document", "chunk this file", "needle in haystack", "exceeds maximum allowed tokens", "File content exceeds", "file too large to read".
 allowed-tools: Bash(rlm:*)
 metadata:
   author: dotnet-knowledge-base
