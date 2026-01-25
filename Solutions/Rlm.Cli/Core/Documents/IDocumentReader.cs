@@ -60,11 +60,6 @@ public static class DocumentReaderExtensions
         if (Uri.TryCreate(source, UriKind.Absolute, out Uri? uri))
         {
             // If it's already a URI, keep it (including file:// URIs).
-            if (!string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
-            {
-                return uri;
-            }
-
             return uri;
         }
 
@@ -98,11 +93,6 @@ public static class DocumentReaderExtensions
         if (Uri.TryCreate(source, UriKind.Absolute, out Uri? uri))
         {
             // If it's already a URI, keep it (including file:// URIs).
-            if (!string.Equals(uri.Scheme, "file", StringComparison.OrdinalIgnoreCase))
-            {
-                return uri;
-            }
-
             return uri;
         }
 

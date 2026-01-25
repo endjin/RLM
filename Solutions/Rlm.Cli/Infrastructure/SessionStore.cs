@@ -49,11 +49,19 @@ public sealed class SessionStore(IFileSystem fileSystem, IEnvironment environmen
     private FilePath GetSessionPath(string? sessionId)
     {
         DirectoryPath home = GetHomeDirectory();
-        string filename = string.IsNullOrWhiteSpace(sessionId)
-            ? SessionFileName
-            : $"rlm-session-{sessionId}.json";
 
-        return home.CombineWithFilePath(filename);
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            return home.CombineWithFilePath(SessionFileName);
+        }
+
+        // Security check: Prevent path traversal
+        if (sessionId.Any(c => !char.IsLetterOrDigit(c) && c != '-' && c != '_'))
+        {
+            throw new ArgumentException("Session ID must contain only alphanumeric characters, hyphens, or underscores.", nameof(sessionId));
+        }
+
+        return home.CombineWithFilePath($"rlm-session-{sessionId}.json");
     }
 
     /// <summary>
@@ -123,24 +131,12 @@ public sealed class SessionStore(IFileSystem fileSystem, IEnvironment environmen
     {
         DirectoryPath directory = GetHomeDirectory();
         
-        // Pattern to match session files: rlm-session-*.json and .rlm-session.json
-        // Since globbing might be limited in IFileSystem or depend on impl, we'll iterate.
-        // But Spectre.IO IFileSystem usually has Globber if extended, or we assume specific pattern.
-        // Here we will use simple iteration if possible or just try to delete known patterns if we can list.
-        // Actually, Spectre.IO doesn't always expose easy globbing on Directory.
-        // But for this environment, let's assume we can list files.
-        // Wait, IFileSystem.Directory.GetFiles might not be available directly on interface depending on version.
-        // Let's check what IFileSystem we have. It was injected as FileSystem.
-        
-        // Assuming we can search. If not, we might need a Globber.
-        // Let's implement a safe way: try to list files in the directory.
-        
+        // Delete all session files matching known patterns
         try 
         {
             IDirectory dir = fileSystem.GetDirectory(directory);
             if (dir.Exists)
             {
-                // Filter for our session files
                 // Default session: .rlm-session.json
                 // Named sessions: rlm-session-*.json
                 
