@@ -100,8 +100,8 @@ public sealed class WordDocumentReaderTests
         
         // Empty paragraph with heading style should be just the hashes? Or maybe handled gracefully?
         // Implementation: content.Append(new string('#', level)).Append(' '); then append text.
-        // So empty paragraph -> "# \n"
-        content.ShouldContain("# \n");
+        // So empty paragraph -> "# " + Environment.NewLine
+        content.ShouldContain("# " + Environment.NewLine);
     }
 
     private static void CreateDocxWithHeadings(string filePath)
