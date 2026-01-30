@@ -27,9 +27,6 @@ public sealed partial class SemanticChunker(
     bool mergeSmall = false,
     string? filterPattern = null) : IChunker
 {
-    [GeneratedRegex(@"^(#{1,6})\s+(.+)$", RegexOptions.Multiline)]
-    private static partial Regex HeaderRegex();
-
     public async IAsyncEnumerable<ContentChunk> ChunkAsync(
         RlmDocument document,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)

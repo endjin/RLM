@@ -73,7 +73,24 @@ public sealed partial class WordDocumentReader(IFileSystem fileSystem) : IDocume
             StringBuilder content = new();
             foreach (Paragraph para in body.Elements<Paragraph>())
             {
-                content.AppendLine(para.InnerText);
+                string paragraphText = para.InnerText;
+                string? styleId = para.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+
+                // Check if the paragraph has a style ID that indicates it is a heading.
+                // Standard Word heading styles are named "Heading1", "Heading2", etc.
+                // We extract the level number and prepend the corresponding number of '#' characters
+                // to convert it into a Markdown-style header. This allows downstream components
+                // (like the SemanticChunker) to understand the document structure.
+                if (!string.IsNullOrEmpty(styleId) &&
+                    styleId.StartsWith("Heading", StringComparison.OrdinalIgnoreCase) &&
+                    styleId.Length > 7 &&
+                    int.TryParse(styleId.AsSpan(7), out int level) &&
+                    level >= 1 && level <= 6)
+                {
+                    content.Append(new string('#', level)).Append(' ');
+                }
+
+                content.AppendLine(paragraphText);
             }
 
             string text = content.ToString();
