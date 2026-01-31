@@ -6,6 +6,7 @@ Quick reference for common issues and solutions when using the RLM CLI.
 
 | Issue                  | Cause                     | Solution                                     |
 |------------------------|---------------------------|----------------------------------------------|
+| "rlm: command not found" | RLM not installed       | `dotnet tool install -g rlm`                 |
 | "Session locked"       | Concurrent access         | Use unique `--session` IDs                   |
 | "No chunks available"  | Missing `load` or `chunk` | Run `rlm load` then `rlm chunk`              |
 | "No more chunks"       | Reached end of buffer     | Use `rlm aggregate` to combine results       |
@@ -18,6 +19,26 @@ Quick reference for common issues and solutions when using the RLM CLI.
 ---
 
 ## Common Errors
+
+### RLM Not Installed
+
+**Symptom:** `rlm: command not found` or similar error.
+
+**Cause:** RLM CLI tool not installed or not in PATH.
+
+**Solution:**
+```bash
+# Install RLM (requires .NET 10+)
+dotnet tool install -g rlm
+
+# Verify installation
+rlm --version
+
+# If dotnet tools not in PATH, add to shell profile:
+export PATH="$PATH:$HOME/.dotnet/tools"
+```
+
+---
 
 ### Session Locked
 

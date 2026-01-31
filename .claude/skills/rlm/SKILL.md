@@ -10,14 +10,19 @@ license: Apache-2.0
 
 # RLM - Recursive Language Model Context Tool
 
-## Overview
+## Prerequisites
 
-RLM CLI implements the Data Ingestion Building Blocks pattern for processing documents that exceed your context window. It streams content using IAsyncEnumerable and maintains session state for multi-turn processing.
-
-## Installation
+> **IMPORTANT:** RLM must be installed before use. Verify installation first:
 
 ```bash
-# Install from NuGet (requires .NET 10+)
+which rlm || dotnet tool install -g rlm
+```
+
+**Requirements:**
+- .NET 10+ runtime
+
+```bash
+# Install from NuGet
 dotnet tool install -g rlm
 
 # Update to latest version
@@ -26,6 +31,10 @@ dotnet tool update -g rlm
 # Verify installation
 rlm --version
 ```
+
+## Overview
+
+RLM CLI implements the Data Ingestion Building Blocks pattern for processing documents that exceed your context window. It streams content using IAsyncEnumerable and maintains session state for multi-turn processing.
 
 **Use this skill when:**
 - Input exceeds your context window
@@ -39,8 +48,8 @@ rlm --version
 ## Quick Start
 
 ```bash
-# Minimal workflow: load -> chunk -> process -> aggregate
-rlm load document.md
+# Ensure RLM is installed, then load document
+dotnet tool install -g rlm 2>/dev/null; rlm load document.md
 rlm chunk --strategy uniform --size 50000
 # Process current chunk, then:
 rlm store result_0 "extracted info"
