@@ -35,7 +35,11 @@ public sealed class NextCommand(IAnsiConsole console, ISessionStore sessionStore
 
         if (!session.HasChunks)
         {
-            if (settings.Raw) return 1;
+            if (settings.Raw)
+            {
+                Console.Error.WriteLine("Error: No chunks available. Run 'rlm chunk' first.");
+                return 1;
+            }
 
             if (settings.Json)
             {

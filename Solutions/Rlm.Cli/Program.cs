@@ -2,6 +2,7 @@
 // Copyright (c) Endjin Limited. All rights reserved.
 // </copyright>
 
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Rlm.Cli.Commands;
 using Rlm.Cli.Infrastructure;
@@ -23,7 +24,10 @@ CommandApp app = new(registrar);
 app.Configure(config =>
 {
     config.SetApplicationName("rlm");
-    config.SetApplicationVersion("1.0.0");
+    config.SetApplicationVersion(
+        typeof(Program).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "0.0.0");
 
     // Load command - loads a document into the session
     config.AddCommand<LoadCommand>("load")

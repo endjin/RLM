@@ -142,10 +142,10 @@ rlm clear --all
 
 ### File Locations
 
-| Session Type | File Name               | Location          |
-|--------------|-------------------------|-------------------|
-| Default      | `.rlm-session.json`     | Working directory |
-| Named        | `rlm-session-{id}.json` | Working directory |
+| Session Type | File Name               | Location              |
+|--------------|-------------------------|-----------------------|
+| Default      | `.rlm-session.json`     | Home directory (`~/`) |
+| Named        | `rlm-session-{id}.json` | Home directory (`~/`) |
 
 ### Recommended Naming Patterns
 
@@ -166,7 +166,7 @@ rlm import "rlm-session-child_*.json" --session parent
 rlm import "rlm-session-search_*.json" --session parent
 
 # Verify glob matches expected files
-ls rlm-session-child_*.json
+ls ~/rlm-session-child_*.json
 ```
 
 ---
@@ -192,6 +192,33 @@ rlm next --raw --session parent
 ```bash
 echo "$SUMMARY" | rlm store summary - --session child_1
 ```
+
+### Exporting Session Content to Files
+
+Use `slice` when you need to export session content to files (e.g., for parallel worker input). Use `next` for iterative chunk-by-chunk processing within a single agent.
+
+**For entire content (parallel worker input):**
+```bash
+# Export first 200k chars to a file for a worker
+rlm slice 0:200000 --session parent --raw > chunk_0.txt
+
+# Export specific ranges
+rlm slice 200000:400000 --session parent --raw > chunk_1.txt
+```
+
+**For chunk-by-chunk iteration (single agent):**
+```bash
+# First chunk the document
+rlm chunk --strategy uniform --size 50000 --session parent
+
+# Then iterate through chunks
+rlm next --raw --session parent > chunk_0.txt
+rlm next --raw --session parent > chunk_1.txt
+```
+
+**Key Difference:**
+- `slice` works on the raw document content by character position
+- `next` requires chunking first and iterates through the chunk buffer
 
 ### Nested Recursion (Worker-Spawns-Worker)
 
