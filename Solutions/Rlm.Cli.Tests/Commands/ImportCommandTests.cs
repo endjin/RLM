@@ -147,7 +147,7 @@ public sealed class ImportCommandTests
         ImportCommand.Settings settings = new() { Pattern = "child_*.json" };
         CommandContext context = CreateCommandContext();
 
-        int result = await command.ExecuteAsync(context, settings, CancellationToken.None);
+        await command.ExecuteAsync(context, settings, CancellationToken.None);
 
         // Assert: Wrong pattern should still fail (not a session file pattern)
         console.Output.ShouldContain("No files found");

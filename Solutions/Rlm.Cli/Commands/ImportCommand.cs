@@ -50,12 +50,13 @@ public sealed class ImportCommand(
 
         // If pattern looks like session files and directory is CWD,
         // check home directory first (where sessions are actually stored)
-        bool isSessionPattern = pattern.StartsWith("rlm-session-", StringComparison.OrdinalIgnoreCase)
+        bool isSessionPattern = (pattern.StartsWith("rlm-session-", StringComparison.OrdinalIgnoreCase)
+                              || pattern.StartsWith(".rlm-session", StringComparison.OrdinalIgnoreCase))
                              && pattern.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
 
         if (isSessionPattern && directory.FullPath == workingDir.FullPath)
         {
-            DirectoryPath homeDir = GetHomeDirectory();
+            DirectoryPath homeDir = sessionStore.GetSessionDirectory();
             IDirectory homeDirectory = fileSystem.GetDirectory(homeDir);
 
             if (homeDirectory.Exists)
@@ -120,18 +121,5 @@ public sealed class ImportCommand(
         console.MarkupLine($"[cyan]Total results:[/] {session.Results.Count}");
 
         return 0;
-    }
-
-    private DirectoryPath GetHomeDirectory()
-    {
-        string? home = environment.GetEnvironmentVariable("HOME")
-            ?? environment.GetEnvironmentVariable("USERPROFILE");
-
-        if (string.IsNullOrEmpty(home))
-        {
-            home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-        }
-
-        return new DirectoryPath(home);
     }
 }
