@@ -153,12 +153,24 @@ rlm load massive.pdf --session parent
 rlm chunk --strategy uniform --size 30000 --session parent
 
 # 2. Parent extracts chunks and spawns workers
+#    IMPORTANT: Chunking (step 1) must complete before using `next`
 rlm next --raw --session parent > chunk_0.txt
 # SPAWN: rlm-worker with "Process chunk_0.txt, session=child_0"
+
+rlm next --raw --session parent > chunk_1.txt
+# SPAWN: rlm-worker with "Process chunk_1.txt, session=child_1"
+# ... continue for all chunks
 
 # 3. After workers complete, import and aggregate
 rlm import "rlm-session-child_*.json" --session parent
 rlm aggregate --session parent
+```
+
+**Alternative: Use `slice` for exporting content without chunking:**
+```bash
+# Export content by character position (no chunking required)
+rlm slice 0:30000 --session parent --raw > chunk_0.txt
+rlm slice 30000:60000 --session parent --raw > chunk_1.txt
 ```
 
 **Key Rules:**

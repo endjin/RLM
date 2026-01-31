@@ -500,9 +500,9 @@ With `--final` flag:
 
 ## Session File Format
 
-Session files are stored at:
+Session files are stored in the home directory (`~/`):
 - Default: `~/.rlm-session.json`
-- Named: `rlm-session-{id}.json`
+- Named: `~/rlm-session-{id}.json`
 
 **Structure:**
 

@@ -28,6 +28,22 @@ dotnet tool install -g rlm
 dotnet tool update -g rlm
 ```
 
+### Setup Claude Code Integration
+
+To use RLM with Claude Code, copy the skills and agent files to your project:
+
+```bash
+# Clone the repository (or download the .claude folder)
+git clone https://github.com/endjin/RLM.git
+
+# Copy the .claude folder to your project
+cp -r RLM/.claude /path/to/your/project/
+```
+
+This provides:
+- **Skill** (`.claude/skills/rlm/`) - Invoke with `/rlm` to process large documents
+- **Agent** (`.claude/agents/rlm-worker/`) - Parallel chunk processing worker for Claude Code
+
 ### Build and Run
 
 ```bash

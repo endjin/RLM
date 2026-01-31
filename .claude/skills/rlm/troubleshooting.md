@@ -4,17 +4,17 @@ Quick reference for common issues and solutions when using the RLM CLI.
 
 ## Quick Reference Table
 
-| Issue                  | Cause                     | Solution                                     |
-|------------------------|---------------------------|----------------------------------------------|
-| "rlm: command not found" | RLM not installed       | `dotnet tool install -g rlm`                 |
-| "Session locked"       | Concurrent access         | Use unique `--session` IDs                   |
-| "No chunks available"  | Missing `load` or `chunk` | Run `rlm load` then `rlm chunk`              |
-| "No more chunks"       | Reached end of buffer     | Use `rlm aggregate` to combine results       |
-| Output has formatting  | Default output mode       | Use `--raw` for clean text                   |
-| Too many small chunks  | Granular semantic split   | Add `--min-size 5000 --merge-small`          |
-| Session file not found | Wrong session ID          | Check `ls rlm-session-*.json`                |
-| Pattern not matching   | Regex escaping            | Escape special chars: `\\[`, `\\]`           |
-| Import finds no files  | Glob pattern wrong        | Test glob with `ls rlm-session-child_*.json` |
+| Issue                    | Cause                     | Solution                                       |
+|--------------------------|---------------------------|------------------------------------------------|
+| "rlm: command not found" | RLM not installed         | `dotnet tool install -g rlm`                   |
+| "Session locked"         | Concurrent access         | Use unique `--session` IDs                     |
+| "No chunks available"    | Missing `load` or `chunk` | Run `rlm load` then `rlm chunk`                |
+| "No more chunks"         | Reached end of buffer     | Use `rlm aggregate` to combine results         |
+| Output has formatting    | Default output mode       | Use `--raw` for clean text                     |
+| Too many small chunks    | Granular semantic split   | Add `--min-size 5000 --merge-small`            |
+| Session file not found   | Wrong session ID          | Check `ls ~/rlm-session-*.json`                |
+| Pattern not matching     | Regex escaping            | Escape special chars: `\\[`, `\\]`             |
+| Import finds no files    | Glob pattern wrong        | Test glob with `ls ~/rlm-session-child_*.json` |
 
 ---
 
@@ -140,8 +140,8 @@ rlm filter "ERROR"
 
 **Solution:**
 ```bash
-# Verify files exist
-ls rlm-session-*.json
+# Verify files exist (sessions are stored in home directory)
+ls ~/rlm-session-*.json
 
 # Match the exact naming pattern used by workers
 rlm import "rlm-session-child_*.json" --session parent
@@ -183,7 +183,7 @@ rlm import "rlm-session-child_0_*.json" --session child_0
 # Matches: child_0_0, child_0_1 (NOT child_0_0_0)
 
 # Verify pattern before importing
-ls rlm-session-child_0_*.json
+ls ~/rlm-session-child_0_*.json
 ```
 
 ---
@@ -260,11 +260,11 @@ rlm info --progress
 # List stored results
 rlm results
 
-# View session file directly
-cat rlm-session-{id}.json | jq .
+# View session file directly (sessions are stored in home directory)
+cat ~/rlm-session-{id}.json | jq .
 
 # List all session files
-ls -la rlm-session-*.json
+ls -la ~/rlm-session-*.json
 ```
 
 ---
