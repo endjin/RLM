@@ -332,13 +332,15 @@ rlm load proposal.docx
 rlm info
 # Shows word count, author, title from document properties
 
-# 3. Use semantic chunking (preserves paragraph structure)
+# 3. Use semantic chunking (Word headings converted to Markdown headers)
 rlm chunk --strategy semantic --min-size 3000
 
 # 4. Process sections
 rlm store exec_summary "Proposal for $2M infrastructure upgrade"
 rlm next
 ```
+
+**Note:** Word documents with Heading1-6 styles are automatically converted to Markdown headers (`#` through `######`), enabling proper semantic chunking by document structure.
 
 **When to use:**
 - Processing business proposals and reports
@@ -441,7 +443,9 @@ rlm aggregate --session parent
 - Tasks that don't require context from previous chunks
 - Extraction, counting, or search tasks
 
-See [agent-guide.md](agent-guide.md) for the complete parallel processing protocol, including decision criteria for when to use parallel vs sequential processing.
+**Note:** Workers can recursively spawn child workers if chunks are still too large.
+See [agent-guide.md](agent-guide.md) for the complete recursive delegation protocol
+including worker decision criteria and hierarchical session naming.
 
 ---
 

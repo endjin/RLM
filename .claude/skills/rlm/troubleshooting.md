@@ -131,6 +131,42 @@ rlm import "rlm-session-child_*.json" --session parent
 
 ---
 
+### Max Recursion Depth Exceeded
+
+**Symptom:** Error "Maximum recursion depth (5) exceeded" when chunking.
+
+**Cause:** Document decomposition has reached 5 levels deep.
+
+**Solution:**
+```bash
+# Check current depth
+rlm info --json --session child_0_0_0_0
+# If recursionDepth: 5, must process inline (no more chunking)
+
+# Process content directly without further chunking
+# Or use larger chunk sizes at earlier levels
+```
+
+---
+
+### Deep Nesting Session Conflicts
+
+**Symptom:** Import misses some child sessions in deeply nested workflows.
+
+**Cause:** Glob pattern too broad or too narrow.
+
+**Solution:**
+```bash
+# Import ONLY direct children (one underscore level)
+rlm import "rlm-session-child_0_*.json" --session child_0
+# Matches: child_0_0, child_0_1 (NOT child_0_0_0)
+
+# Verify pattern before importing
+ls rlm-session-child_0_*.json
+```
+
+---
+
 ## Best Practices
 
 ### Session Management

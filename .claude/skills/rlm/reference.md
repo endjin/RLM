@@ -17,11 +17,11 @@ rlm load <source> [options]
 
 **Options:**
 
-| Option             | Description                        | Default   |
-|--------------------|------------------------------------|-----------|
-| `--session <id>`   | Named session for isolation        | `default` |
-| `--pattern <glob>` | Glob pattern for directory loading | `*`       |
-| `--merge <bool>`   | Merge multiple documents           | `true`    |
+| Option           | Description                 | Default                            |
+|------------------|-----------------------------|------------------------------------|
+| `--session <id>` | Named session for isolation | `default`                          |
+| `-p              | --pattern <glob>`           | Glob pattern for directory loading |
+| `--merge <bool>` | Merge multiple documents    | `true`                             |
 
 **Examples:**
 
@@ -93,16 +93,18 @@ rlm slice <range> [options]
 
 **Options:**
 
-| Option           | Description   |
-|------------------|---------------|
-| `--session <id>` | Named session |
+| Option           | Description                     |
+|------------------|---------------------------------|
+| `--session <id>` | Named session                   |
+| `--raw`          | Raw text output (no formatting) |
 
 **Examples:**
 
 ```bash
-rlm slice 0:1000      # First 1000 chars
-rlm slice -500:       # Last 500 chars
-rlm slice 1000:2000   # Middle section
+rlm slice 0:1000         # First 1000 chars
+rlm slice -500:          # Last 500 chars
+rlm slice 1000:2000      # Middle section
+rlm slice 0:5000 --raw   # Raw output for piping
 ```
 
 ---
@@ -117,21 +119,22 @@ rlm chunk [options]
 
 **Options:**
 
-| Option                 | Description                       | Default   |
-|------------------------|-----------------------------------|-----------|
-| `--session <id>`       | Named session                     | `default` |
-| `--strategy <name>`    | Chunking strategy                 | `uniform` |
-| `--size <chars>`       | Characters per chunk              | `50000`   |
-| `--overlap <chars>`    | Overlap between chunks            | `0`       |
-| `--max-tokens <n>`     | Tokens per chunk (token strategy) | `512`     |
-| `--overlap-tokens <n>` | Token overlap (token strategy)    | `50`      |
-| `--min-level <n>`      | Min header level (semantic)       | `1`       |
-| `--max-level <n>`      | Max header level (semantic)       | `3`       |
-| `--min-size <chars>`   | Min chunk size (semantic)         | `0`       |
-| `--max-size <chars>`   | Max chunk size (semantic)         | `0`       |
-| `--merge-small`        | Merge consecutive small chunks    | `false`   |
-| `--pattern <regex>`    | Filter pattern (hybrid mode)      | -         |
-| `--query <text>`       | Query for auto strategy           | -         |
+| Option                 | Description                       | Default                         |
+|------------------------|-----------------------------------|---------------------------------|
+| `--session <id>`       | Named session                     | `default`                       |
+| `-s                    | --strategy <name>`                | Chunking strategy               |
+| `--size <chars>`       | Characters per chunk              | `50000`                         |
+| `--overlap <chars>`    | Overlap between chunks            | `0`                             |
+| `--max-tokens <n>`     | Tokens per chunk (token strategy) | `512`                           |
+| `--overlap-tokens <n>` | Token overlap (token strategy)    | `50`                            |
+| `--min-level <n>`      | Min header level (semantic)       | `1`                             |
+| `--max-level <n>`      | Max header level (semantic)       | `3`                             |
+| `--min-size <chars>`   | Min chunk size (semantic)         | `0`                             |
+| `--max-size <chars>`   | Max chunk size (semantic)         | `0`                             |
+| `--merge-small`        | Merge consecutive small chunks    | `false`                         |
+| `-p                    | --pattern <regex>`                | Filter pattern (hybrid mode)    |
+| `-c                    | --context <chars>`                | Context around matches (filter) |
+| `-q                    | --query <text>`                   | Query for auto strategy         |
 
 **Strategies:**
 
@@ -161,10 +164,10 @@ rlm filter <pattern> [options]
 
 **Options:**
 
-| Option              | Description                  | Default   |
-|---------------------|------------------------------|-----------|
-| `--session <id>`    | Named session                | `default` |
-| `--context <chars>` | Characters around each match | `500`     |
+| Option           | Description        | Default                      |
+|------------------|--------------------|------------------------------|
+| `--session <id>` | Named session      | `default`                    |
+| `-c              | --context <chars>` | Characters around each match |
 
 **Examples:**
 
@@ -207,15 +210,19 @@ rlm skip <count> [options]
 
 **Options:**
 
-| Option           | Description   |
-|------------------|---------------|
-| `--session <id>` | Named session |
+| Option           | Description                                  |
+|------------------|----------------------------------------------|
+| `--session <id>` | Named session                                |
+| `-j              | --json`                                      |
+| `--skip-empty`   | Skip empty or very small chunks (<100 chars) |
 
 **Examples:**
 
 ```bash
-rlm skip 10      # Skip forward 10 chunks
-rlm skip -5      # Skip backward 5 chunks
+rlm skip 10              # Skip forward 10 chunks
+rlm skip -5              # Skip backward 5 chunks
+rlm skip 5 --skip-empty  # Skip forward, ignoring small chunks
+rlm skip 3 --json        # JSON output with skip metadata
 ```
 
 ---
@@ -233,16 +240,20 @@ rlm jump <position> [options]
 
 **Options:**
 
-| Option           | Description   |
-|------------------|---------------|
-| `--session <id>` | Named session |
+| Option           | Description                     |
+|------------------|---------------------------------|
+| `--session <id>` | Named session                   |
+| `-j              | --json`                         |
+| `--raw`          | Raw text output (no formatting) |
 
 **Examples:**
 
 ```bash
-rlm jump 50      # Jump to chunk 50
-rlm jump 50%     # Jump to 50% position
-rlm jump 100%    # Jump to last chunk
+rlm jump 50         # Jump to chunk 50
+rlm jump 50%        # Jump to 50% position
+rlm jump 100%       # Jump to last chunk
+rlm jump 25 --raw   # Raw output for piping
+rlm jump 10 --json  # JSON output with jump metadata
 ```
 
 ---
@@ -326,12 +337,13 @@ rlm aggregate [options]
 
 **Options:**
 
-| Option               | Description           | Default   |
-|----------------------|-----------------------|-----------|
-| `--session <id>`     | Named session         | `default` |
-| `--separator <text>` | Result separator      | `\n`      |
-| `--json`             | JSON output format    | -         |
-| `--final`            | Add completion signal | `false`   |
+| Option           | Description                     | Default               |
+|------------------|---------------------------------|-----------------------|
+| `--session <id>` | Named session                   | `default`             |
+| `-s              | --separator <text>`             | Result separator      |
+| `-j              | --json`                         | JSON output format    |
+| `-f              | --final`                        | Add completion signal |
+| `--raw`          | Raw text output (no formatting) | -                     |
 
 **Examples:**
 
@@ -368,15 +380,30 @@ rlm clear --all              # Clear all sessions
 
 ---
 
-## Global Options
+## Option Availability by Command
 
-These options work with all commands:
+Not all options are available on every command. Here's the per-command availability:
 
-| Option           | Description                     | Example             |
-|------------------|---------------------------------|---------------------|
-| `--session <id>` | Use named session for isolation | `--session child_1` |
-| `--raw`          | Raw text output (no formatting) | `rlm next --raw`    |
-| `--json`         | JSON output format              | `rlm info --json`   |
+| Command     | `--session` | `--raw` | `--json` |
+|-------------|:-----------:|:-------:|:--------:|
+| `load`      |      ✓      |         |          |
+| `info`      |      ✓      |         |    ✓     |
+| `slice`     |      ✓      |    ✓    |          |
+| `chunk`     |      ✓      |         |          |
+| `filter`    |      ✓      |         |          |
+| `next`      |      ✓      |    ✓    |    ✓     |
+| `skip`      |      ✓      |         |    ✓     |
+| `jump`      |      ✓      |    ✓    |    ✓     |
+| `store`     |      ✓      |         |          |
+| `results`   |      ✓      |         |          |
+| `import`    |      ✓      |         |          |
+| `aggregate` |      ✓      |    ✓    |    ✓     |
+| `clear`     |      ✓      |         |          |
+
+**Notes:**
+- `--session <id>` is available on all commands for session isolation
+- `--raw` outputs plain text without formatting, useful for piping to other tools
+- `--json` outputs structured JSON for machine parsing
 
 ---
 
@@ -390,11 +417,39 @@ These options work with all commands:
   "totalLength": 1048576,
   "tokenEstimate": 262144,
   "lineCount": 15234,
+  "loadedAt": "2024-01-15T10:30:00.0000000Z",
   "chunkCount": 63,
   "currentChunkIndex": 32,
-  "resultCount": 5
+  "remainingChunks": 30,
+  "resultCount": 5,
+  "recursionDepth": 0,
+  "maxRecursionDepth": 5,
+  "progressPercent": 52.38,
+  "processedChars": 524288,
+  "totalChars": 1000000,
+  "averageChunkSize": 15873,
+  "remainingTokenEstimate": 125000
 }
 ```
+
+| Field                    | Description                             |
+|--------------------------|-----------------------------------------|
+| `source`                 | File path or "stdin"                    |
+| `totalLength`            | Total document character count          |
+| `tokenEstimate`          | Estimated token count (~chars/4)        |
+| `lineCount`              | Number of lines in document             |
+| `loadedAt`               | ISO 8601 timestamp when document loaded |
+| `chunkCount`             | Total number of chunks                  |
+| `currentChunkIndex`      | Current position (0-based)              |
+| `remainingChunks`        | Chunks left to process                  |
+| `resultCount`            | Number of stored results                |
+| `recursionDepth`         | Current recursion depth (0-5)           |
+| `maxRecursionDepth`      | Maximum allowed recursion depth (5)     |
+| `progressPercent`        | Completion percentage                   |
+| `processedChars`         | Characters processed so far             |
+| `totalChars`             | Total characters across all chunks      |
+| `averageChunkSize`       | Average characters per chunk            |
+| `remainingTokenEstimate` | Estimated tokens remaining              |
 
 ### Chunk Output (`rlm next --json`)
 
@@ -483,6 +538,21 @@ Session files are stored at:
 }
 ```
 
+### Recursion Depth
+
+The `recursionDepth` field tracks how many levels of nested decomposition have occurred:
+
+- **Value 0**: Top-level processing (no recursion yet)
+- **Values 1-5**: Nested decomposition levels
+- **Maximum**: 5 (defined by `MaxRecursionDepth` constant)
+
+When processing large chunks, workers can either:
+1. **Delegate:** Spawn child `rlm-worker` agents (if depth < 4 and chunks > 3)
+2. **Inline:** Process sub-chunks themselves (at depth limit or few chunks)
+
+The recursion depth increments with each chunking operation. If depth exceeds 5,
+the session rejects further decomposition attempts.
+
 ### Document Metadata Fields
 
 | Field                  | Description              | Formats             |
@@ -498,11 +568,11 @@ Session files are stored at:
 | `author`               | Document author          | PDF, Word           |
 | `pageCount`            | Page count               | PDF                 |
 | `elementCount`         | JSON element count       | JSON                |
-| `wordCount`            | Word count               | Markdown            |
+| `wordCount`            | Word count               | Markdown, Word      |
 | `headerCount`          | Header count             | Markdown            |
 | `codeBlockCount`       | Code block count         | Markdown            |
 | `codeLanguages`        | Languages in code blocks | Markdown            |
-| `estimatedReadingTime` | Reading time in minutes  | Markdown            |
+| `estimatedReadingTime` | Reading time in minutes  | Markdown, Word      |
 | `extendedMetadata`     | YAML frontmatter pairs   | Markdown            |
 
 ---

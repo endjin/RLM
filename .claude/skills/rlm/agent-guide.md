@@ -193,25 +193,120 @@ rlm next --raw --session parent
 echo "$SUMMARY" | rlm store summary - --session child_1
 ```
 
-### Nested Recursion
+### Nested Recursion (Worker-Spawns-Worker)
 
-If a chunk is still too large for a worker, it can recursively chunk further.
+Workers can spawn child workers for true recursive parallel decomposition. This enables processing of arbitrarily large documents through hierarchical delegation.
+
+**⚠️ Maximum recursion depth: 5 levels**
+
+The session tracks recursion depth and will reject decomposition beyond 5 levels. Check depth with `rlm info --json` (see `recursionDepth` and `maxRecursionDepth` fields).
+
+#### Multi-Level Delegation Diagram
+
+```
+Parent Agent (depth 0)
+├── child_0 (depth 1) ─────────────────────────┐
+│   ├── child_0_0 (depth 2)                    │
+│   │   ├── child_0_0_0 (depth 3)              │ True parallel
+│   │   └── child_0_0_1 (depth 3)              │ decomposition
+│   └── child_0_1 (depth 2)                    │
+│       └── child_0_1_0 (depth 3)              │
+├── child_1 (depth 1) ─────────────────────────┤
+│   ├── child_1_0 (depth 2)                    │
+│   └── child_1_1 (depth 2)                    │
+└── child_2 (depth 1) ─────────────────────────┘
+    └── (processes inline - small chunk)
+```
+
+#### Session Naming Convention (Hierarchical)
+
+```
+Level 0 (parent):       parent
+Level 1 (workers):      child_0, child_1, child_2
+Level 2 (sub-workers):  child_0_0, child_0_1, child_1_0
+Level 3 (sub-sub):      child_0_0_0, child_0_0_1
+Level 4:                child_0_0_0_0
+Level 5 (max):          child_0_0_0_0_0 (must process inline)
+```
+
+#### Worker Decision Criteria
+
+Workers decide between delegation and inline processing:
+
+| Condition                                 | Action                                          |
+|-------------------------------------------|-------------------------------------------------|
+| `recursionDepth >= 4`                     | Process INLINE (approaching limit)              |
+| `chunkCount <= 3`                         | Process INLINE (not enough to justify spawning) |
+| `recursionDepth < 4` AND `chunkCount > 3` | DELEGATE to child workers                       |
+
+#### Delegation Workflow (Worker Spawning Children)
 
 ```bash
 # Worker receives large chunk
 rlm load chunk_0.txt --session child_0
-rlm info --session child_0  # Check size
+rlm info --json --session child_0  # Check size and recursion depth
 
-# Still too big - chunk again
+# Still too big - chunk again (increments recursion depth)
 rlm chunk --strategy uniform --size 15000 --session child_0
+rlm info --json --session child_0
+# Check: recursionDepth < 4 AND chunkCount > 3
 
-# Process sub-chunks
-rlm next --session child_0
-# ... process and store intermediate results ...
+# DELEGATE: Extract chunks and spawn child workers
+rlm next --raw --session child_0 > subchunk_0.txt
+# SPAWN: rlm-worker with session=child_0_0, file=subchunk_0.txt
+
+rlm next --raw --session child_0 > subchunk_1.txt
+# SPAWN: rlm-worker with session=child_0_1, file=subchunk_1.txt
+
+# ... spawn workers for all chunks ...
+
+# Wait for all children to complete
+
+# Import child results and aggregate
+rlm import "rlm-session-child_0_*.json" --session child_0
+rlm aggregate --session child_0
+rlm store result "<aggregated finding>" --session child_0
+
+# Cleanup
+rm -f subchunk_*.txt
+```
+
+#### Inline Processing Workflow (Fallback)
+
+When at depth limit or with few chunks, process inline:
+
+```bash
+# Worker at depth 4 receives chunk
+rlm load chunk_0_0_0.txt --session child_0_0_0
+rlm info --json --session child_0_0_0
+# Shows: recursionDepth: 4 → must process inline
+
+# Chunk and process yourself
+rlm chunk --strategy uniform --size 15000 --session child_0_0_0
+
+rlm next --session child_0_0_0
+# ... analyze and extract ...
+rlm store sub_0 "finding 1" --session child_0_0_0
+
+rlm next --session child_0_0_0
+rlm store sub_1 "finding 2" --session child_0_0_0
 
 # Aggregate before storing final result
-rlm aggregate --session child_0
-# Use aggregated content as the final result
+rlm aggregate --session child_0_0_0
+rlm store result "<aggregated content>" --session child_0_0_0
+```
+
+#### Import Patterns for Deep Nesting
+
+```bash
+# Parent imports direct children
+rlm import "rlm-session-child_*.json" --session parent
+
+# Worker imports its children (note the underscore pattern)
+rlm import "rlm-session-child_0_*.json" --session child_0
+
+# Sub-worker imports its children
+rlm import "rlm-session-child_0_0_*.json" --session child_0_0
 ```
 
 ---

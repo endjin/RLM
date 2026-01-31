@@ -7,17 +7,25 @@ A .NET CLI tool for processing large documents that exceed LLM context windows. 
 - **Multi-format support** - Markdown, PDF, HTML, JSON, Word (.docx), plain text
 - **6 chunking strategies** - Uniform, filtering, semantic, token-based, recursive, auto
 - **Stateful sessions** - Persistent session state for multi-turn processing
-- **AOT-compatible** - Native ahead-of-time compilation support
-- **Streaming architecture** - `IAsyncEnumerable<T>` for memory-efficient processing
 
 ## Projects in Solution
 
 | Project           | Description                          | Framework                         |
 |-------------------|--------------------------------------|-----------------------------------|
-| **Rlm.Cli**       | Console application with 12 commands | .NET 10, AOT-compatible           |
+| **Rlm.Cli**       | Console application with 13 commands | .NET 10, AOT-compatible           |
 | **Rlm.Cli.Tests** | Unit tests                           | MSTest 4.0, Shouldly, NSubstitute |
 
 ## Quick Start
+
+### Install from NuGet
+
+```bash
+# Requires .NET 10+
+dotnet tool install -g rlm
+
+# Update to latest version
+dotnet tool update -g rlm
+```
 
 ### Build and Run
 
@@ -32,7 +40,7 @@ dotnet run --project Solutions/Rlm.Cli -- load document.md
 dotnet test --solution Solutions/Rlm.slnx
 ```
 
-### Install as Global Tool
+### Install as Global Tool (from source)
 
 ```bash
 cd Solutions/Rlm.Cli
@@ -63,14 +71,14 @@ rlm aggregate
 
 ## Supported Formats
 
-| Format     | Extensions         | Features                                   |
-|------------|--------------------|--------------------------------------------|
-| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers     |
-| PDF        | `.pdf`             | Text extraction, page count, title, author |
-| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure  |
-| JSON       | `.json`            | Pretty-printing, element count             |
-| Word       | `.docx`            | Paragraph extraction, document properties  |
-| Plain text | `.txt`, etc.       | Basic text loading                         |
+| Format     | Extensions         | Features                                                        |
+|------------|--------------------|-----------------------------------------------------------------|
+| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers                          |
+| PDF        | `.pdf`             | Text extraction, page count, title, author                      |
+| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure                       |
+| JSON       | `.json`            | Pretty-printing, element count                                  |
+| Word       | `.docx`            | Heading preservation, paragraph extraction, document properties |
+| Plain text | `.txt`, etc.       | Basic text loading                                              |
 
 ## Commands Reference
 
@@ -143,7 +151,7 @@ rlm import "summaries/*.txt" --session parent
 
 ```
 Solutions/Rlm.Cli/
-├── Commands/          # 12 CLI commands (load, chunk, next, etc.)
+├── Commands/          # 13 CLI commands (load, chunk, next, etc.)
 ├── Core/
 │   ├── Documents/     # Multi-format readers (PDF, HTML, Word, etc.)
 │   ├── Chunking/      # 6 chunking strategies

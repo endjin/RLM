@@ -14,11 +14,27 @@ license: Apache-2.0
 
 RLM CLI implements the Data Ingestion Building Blocks pattern for processing documents that exceed your context window. It streams content using IAsyncEnumerable and maintains session state for multi-turn processing.
 
+## Installation
+
+```bash
+# Install from NuGet (requires .NET 10+)
+dotnet tool install -g rlm
+
+# Update to latest version
+dotnet tool update -g rlm
+
+# Verify installation
+rlm --version
+```
+
 **Use this skill when:**
 - Input exceeds your context window
 - You need to find specific information in large documents (needle-in-haystack)
 - You need to summarize or aggregate data from massive corpora
 - You need to compare sections across large documents
+
+**Key limits:**
+- **Max recursion depth:** 5 levels (prevents infinite decomposition)
 
 ## Quick Start
 
@@ -45,14 +61,14 @@ rlm aggregate                         # Combine all results
 
 ## Supported Formats
 
-| Format     | Extension(s)       | Features                                   |
-|------------|--------------------|--------------------------------------------|
-| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers     |
-| PDF        | `.pdf`             | Text extraction, page count, title, author |
-| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure  |
-| JSON       | `.json`            | Pretty-prints, element count               |
-| Word       | `.docx`            | Paragraph extraction, document properties  |
-| Plain text | `.txt`, etc.       | Basic text loading                         |
+| Format     | Extension(s)       | Features                                                        |
+|------------|--------------------|-----------------------------------------------------------------|
+| Markdown   | `.md`, `.markdown` | YAML frontmatter, code blocks, headers                          |
+| PDF        | `.pdf`             | Text extraction, page count, title, author                      |
+| HTML       | `.html`, `.htm`    | Converts to Markdown, preserves structure                       |
+| JSON       | `.json`            | Pretty-prints, element count                                    |
+| Word       | `.docx`            | Heading preservation, paragraph extraction, document properties |
+| Plain text | `.txt`, etc.       | Basic text loading                                              |
 
 ## Core Workflow
 
@@ -141,7 +157,8 @@ rlm aggregate --session parent
 - Each worker uses unique `--session child_N`
 - Workers store results with key `result`
 
-See [agent-guide.md](agent-guide.md) for the complete parallel processing protocol.
+**Recursive Delegation:** Workers can spawn their own child workers for very large chunks.
+See [agent-guide.md](agent-guide.md) for the complete recursive delegation protocol.
 
 ## Commands Quick Reference
 
