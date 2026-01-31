@@ -3,6 +3,7 @@
 // </copyright>
 
 using Rlm.Cli.Core.Session;
+using Spectre.IO;
 
 namespace Rlm.Cli.Infrastructure;
 
@@ -30,4 +31,9 @@ public interface ISessionStore
     /// Deletes all RLM session files in the storage location.
     /// </summary>
     void DeleteAll();
+
+    /// <summary>
+    /// Gets the directory where session files are stored.
+    /// </summary>
+    DirectoryPath GetSessionDirectory();
 }

@@ -48,6 +48,28 @@ public sealed class ImportCommand(
             pattern = settings.Pattern;
         }
 
+        // If pattern looks like session files and directory is CWD,
+        // check home directory first (where sessions are actually stored)
+        bool isSessionPattern = (pattern.StartsWith("rlm-session-", StringComparison.OrdinalIgnoreCase)
+                              || pattern.StartsWith(".rlm-session", StringComparison.OrdinalIgnoreCase))
+                             && pattern.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+
+        if (isSessionPattern && directory.FullPath == workingDir.FullPath)
+        {
+            DirectoryPath homeDir = sessionStore.GetSessionDirectory();
+            IDirectory homeDirectory = fileSystem.GetDirectory(homeDir);
+
+            if (homeDirectory.Exists)
+            {
+                IFile[] homeFiles = homeDirectory.GetFiles(pattern, SearchScope.Current).ToArray();
+                if (homeFiles.Length > 0)
+                {
+                    directory = homeDir;
+                    console.MarkupLine($"[dim]Found session files in home directory[/]");
+                }
+            }
+        }
+
         if (string.IsNullOrEmpty(pattern))
         {
             console.MarkupLine($"[red]Error:[/] Invalid pattern: {settings.Pattern}");

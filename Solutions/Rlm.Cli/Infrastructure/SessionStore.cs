@@ -125,6 +125,11 @@ public sealed class SessionStore(IFileSystem fileSystem, IEnvironment environmen
     }
 
     /// <summary>
+    /// Gets the directory where session files are stored.
+    /// </summary>
+    public DirectoryPath GetSessionDirectory() => GetHomeDirectory();
+
+    /// <summary>
     /// Deletes all RLM session files in the storage location.
     /// </summary>
     public void DeleteAll()
