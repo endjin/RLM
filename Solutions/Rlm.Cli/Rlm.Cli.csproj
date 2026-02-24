@@ -71,7 +71,7 @@
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageReference Include="Microsoft.ML.Tokenizers.Data.Cl100kBase" Version="2.0.0" />
     <PackageReference Include="Polly" Version="8.6.5" />
-    <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
+    <PackageReference Include="ReverseMarkdown" Version="5.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
     <PackageReference Include="Spectre.IO" Version="0.21.0" />
